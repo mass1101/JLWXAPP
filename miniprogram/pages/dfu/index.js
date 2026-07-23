@@ -22,7 +22,6 @@ Page({
 
   onShow() {
     const app = getApp();
-    const app = getApp();
     const bleService = app.globalData.bleService;
     const connected = bleService ? bleService.isConnected : false;
     const activated = act.isActivated();
