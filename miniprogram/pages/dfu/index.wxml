@@ -47,14 +47,14 @@
     <view wx:if="{{steps.length}}" class="panel-bg dfu-panel">
       <view class="steps-panel">
         <view class="step" wx:for="{{steps}}" wx:key="index">
-          <view class="step-ind {{item.status}}">\u2713</view>
+          <view class="step-ind {{item.status}}">✓</view>
           <text class="step-text {{item.status}}">{{item.text}}</text>
         </view>
       </view>
     </view>
 
     <view wx:if="{{errorMsg}}" class="panel-bg error-panel">
-      <text class="error-text">\u26A0 {{errorMsg}}</text>
+      <text class="error-text">⚠ {{errorMsg}}</text>
     </view>
 
     <view class="action-row pad-h">

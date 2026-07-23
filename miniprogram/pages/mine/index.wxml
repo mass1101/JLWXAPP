@@ -15,23 +15,23 @@
 
   <view class="menu-list">
     <view class="menu-item" bindtap="goPage" data-page="cards">
-      <text>\u25A3 卡库</text>
+      <text>▣ 卡库</text>
       <text class="menu-badge">{{cardCount}}</text>
     </view>
     <view class="menu-item" bindtap="goPage" data-page="dictionary">
-      <text>\u2261 词典管理</text>
+      <text>≡ 词典管理</text>
     </view>
     <view class="menu-item" bindtap="goPage" data-page="settings">
-      <text>\u2699 设置</text>
+      <text>⚙ 设置</text>
     </view>
     <view class="menu-item" bindtap="goPage" data-page="dfu">
-      <text>\u21BB 固件升级</text>
+      <text>↻ 固件升级</text>
     </view>
     <view class="menu-item" bindtap="goPage" data-page="activation">
-      <text>\u26BF 激活管理</text>
+      <text>⚿ 激活管理</text>
     </view>
     <view class="menu-item" bindtap="goPage" data-page="about">
-      <text>\u24D8 关于</text>
+      <text>ⓘ 关于</text>
     </view>
   </view>
 

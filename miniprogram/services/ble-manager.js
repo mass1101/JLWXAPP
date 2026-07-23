@@ -255,12 +255,13 @@ class BLEManagerClass {
               if (connected) return;
               if (err || !devices || !devices.length) {
                 connected = true;
-                rj(new Error('未发现设备'));
+                rj(new Error('未发现设备，请确认设备已开机且在附近'));
                 return;
               }
               connected = true;
+              this._device = devices[0];
               this._service.connect(devices[0].deviceId, devices[0].isDFU || false)
-                .then(r).catch((e) => rj(e));
+                .then(r).catch((e) => rj(new Error('蓝牙连接失败: ' + (e.message || e.errMsg || '未知'))));
             });
           });
         })
@@ -270,7 +271,7 @@ class BLEManagerClass {
           this._service.onDataReceived(() => {});
           resolve();
         })
-        .catch(reject);
+        .catch((e) => reject(new Error(e.message || e.errMsg || '连接失败，请重试')));
     });
   }
 

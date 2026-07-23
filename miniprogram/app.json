@@ -23,6 +23,12 @@
     "backgroundColor": "#0A1322",
     "backgroundTextStyle": "light"
   },
+  "permission": {
+    "scope.bluetooth": {
+      "desc": "用于发现并连接 Chameleon 蓝牙设备，实现读卡、写卡、卡槽管理等功能"
+    }
+  },
+  "requiredBackgroundModes": ["bluetooth-peripheral"],
   "tabBar": {
     "color": "#6D8090",
     "selectedColor": "#3AD9F7",

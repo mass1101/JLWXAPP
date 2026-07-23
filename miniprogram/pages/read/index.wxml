@@ -23,7 +23,7 @@
 
     <view class="action-row">
       <button class="btn-cyan" bindtap="startRead" loading="{{reading}}">
-        {{reading ? '读取中...' : '\u2316 开始读卡'}}
+        {{reading ? '读取中...' : '⌖ 开始读卡'}}
       </button>
       <button class="btn-outline" bindtap="stopRead">停止</button>
     </view>

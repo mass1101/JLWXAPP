@@ -5,7 +5,7 @@
   <view class="top-bar">
     <text class="logo">巨龙</text>
     <text class="status {{ble.connected ? 'connected' : 'disconnected'}}">
-      {{ble.connected ? '\u260E 已连接' : '\u260E 未连接'}}
+      {{ble.connected ? '☎ 已连接' : '☎ 未连接'}}
     </text>
   </view>
 
@@ -51,9 +51,9 @@
 
   <!-- 快捷操作 -->
   <view class="quick-actions">
-    <view class="btn-cyan btn-quick" bindtap="goRead"><text>\u2316 读卡</text></view>
-    <view class="btn-gold btn-quick" bindtap="goWrite"><text>\u270E 写卡</text></view>
-    <view class="btn-outline btn-quick" bindtap="goSlots"><text>\u25A6 卡槽</text></view>
-    <view class="btn-outline btn-quick" bindtap="goTools"><text>\u2699 工具</text></view>
+    <view class="btn-cyan btn-quick" bindtap="goRead"><text>⌖ 读卡</text></view>
+    <view class="btn-gold btn-quick" bindtap="goWrite"><text>✎ 写卡</text></view>
+    <view class="btn-outline btn-quick" bindtap="goSlots"><text>▦ 卡槽</text></view>
+    <view class="btn-outline btn-quick" bindtap="goTools"><text>⚙ 工具</text></view>
   </view>
 </view>

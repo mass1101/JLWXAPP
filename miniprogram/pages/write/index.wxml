@@ -57,7 +57,7 @@
     </view>
 
     <view class="action-row">
-      <button class="btn-gold" bindtap="startWrite" loading="{{writing}}">{{writing ? '写入中...' : '\u270E 写入'}}</button>
+      <button class="btn-gold" bindtap="startWrite" loading="{{writing}}">{{writing ? '写入中...' : '✎ 写入'}}</button>
       <button class="btn-outline" bindtap="previewData">预览</button>
     </view>
 
