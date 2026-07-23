@@ -228,14 +228,17 @@ class BLEManagerClass {
 
   scan() {
     return new Promise((resolve, reject) => {
+      let done = false;
       this._service.initBluetooth()
         .then(() => {
           this._service.startScan(5000, (devices, err) => {
-            if (err) { reject(err); return; }
+            if (done) return;
+            if (err) { done = true; reject(err); return; }
+            done = true;
             resolve(devices || []);
           });
         })
-        .catch(reject);
+        .catch((e) => { if (!done) { done = true; reject(e); } });
     });
   }
 
@@ -245,15 +248,21 @@ class BLEManagerClass {
         .then(() => {
           if (this._device) {
             return this._service.connect(this._device.deviceId, this._device.isDFU || false);
-          } else {
-            return new Promise((r, rj) => {
-              this._service.startScan(3000, (devices, err) => {
-                if (err || !devices || !devices.length) { rj(new Error('未发现设备')); return; }
-                this._service.connect(devices[0].deviceId, devices[0].isDFU || false)
-                  .then(r).catch(rj);
-              });
-            });
           }
+          return new Promise((r, rj) => {
+            let connected = false;
+            this._service.startScan(3000, (devices, err) => {
+              if (connected) return;
+              if (err || !devices || !devices.length) {
+                connected = true;
+                rj(new Error('未发现设备'));
+                return;
+              }
+              connected = true;
+              this._service.connect(devices[0].deviceId, devices[0].isDFU || false)
+                .then(r).catch((e) => rj(e));
+            });
+          });
         })
         .then(() => {
           this._state.connected = true;
