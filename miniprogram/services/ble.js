@@ -171,38 +171,69 @@ class BLEService {
     this._txChar = txChar;
     this._rxChar = rxChar;
 
-    wx.notifyBLECharacteristicValueChange({
-      deviceId: this._deviceId,
-      serviceId: BLE_UUIDS.NRF_SERVICE,
-      characteristicId: txChar.uuid,
-      state: true,
-      success: () => {
-        wx.onBLECharacteristicValueChange((res) => {
-          if (res.characteristicId === txChar.uuid && this._dataCallback) {
-            this._dataCallback(new Uint8Array(res.value));
-          }
-        });
-        // 发送握手帧
-        const handshake = new Uint8Array([0x11, 0xEF, 0x03, 0xFB, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00]);
-        wx.writeBLECharacteristicValue({
-          deviceId: this._deviceId,
-          serviceId: BLE_UUIDS.NRF_SERVICE,
-          characteristicId: rxChar.uuid,
-          value: handshake.buffer,
-          success: () => {
-            this._state = STATE.CONNECTED;
-            this._notifyState();
-            resolve();
-          },
-          fail: (err) => {
-            this._state = STATE.IDLE;
-            this._notifyState();
-            reject(err);
-          }
-        });
-      },
-      fail: reject
-    });
+    const listenerRegistered = (res) => {
+      if (res && res.characteristicId === txChar.uuid && this._dataCallback) {
+        this._dataCallback(new Uint8Array(res.value));
+      }
+    };
+
+    const sendHandshake = () => {
+      const handshake = new Uint8Array([0x11, 0xEF, 0x03, 0xFB, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00]);
+      wx.writeBLECharacteristicValue({
+        deviceId: this._deviceId,
+        serviceId: BLE_UUIDS.NRF_SERVICE,
+        characteristicId: rxChar.uuid,
+        value: handshake.buffer,
+        success: () => {
+          this._state = STATE.CONNECTED;
+          this._notifyState();
+          resolve();
+        },
+        fail: (err) => {
+          this._state = STATE.IDLE;
+          this._notifyState();
+          reject(err);
+        }
+      });
+    };
+
+    const tryNotify = () => {
+      wx.notifyBLECharacteristicValueChange({
+        deviceId: this._deviceId,
+        serviceId: BLE_UUIDS.NRF_SERVICE,
+        characteristicId: txChar.uuid,
+        state: true,
+        success: () => {
+          wx.onBLECharacteristicValueChange(listenerRegistered);
+          sendHandshake();
+        },
+        fail: (notifyErr) => {
+          tryMonitorWithoutNotify();
+        }
+      });
+    };
+
+    const tryMonitorWithoutNotify = () => {
+      wx.onBLECharacteristicValueChange(listenerRegistered);
+      wx.writeBLECharacteristicValue({
+        deviceId: this._deviceId,
+        serviceId: BLE_UUIDS.NRF_SERVICE,
+        characteristicId: rxChar.uuid,
+        value: new Uint8Array([0x01, 0x00]).buffer,
+        success: () => {
+          setTimeout(sendHandshake, 300);
+        },
+        fail: () => {
+          sendHandshake();
+        }
+      });
+    };
+
+    if (txChar.properties && !(txChar.properties.notify || txChar.properties.indicate)) {
+      tryMonitorWithoutNotify();
+    } else {
+      tryNotify();
+    }
   }
 
   _setupDFU(characteristics, resolve, reject) {
