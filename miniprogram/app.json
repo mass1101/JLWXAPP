@@ -13,7 +13,7 @@
     "pages/dfu/index",
     "pages/activation/index",
     "pages/tools/index",
-    "pages/tools/tool",
+    "pages/tools/tool/index",
     "pages/about/index"
   ],
   "window": {

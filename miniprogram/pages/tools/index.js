@@ -15,6 +15,6 @@ Page({
   },
   onToolTap(e) {
     const id = e.currentTarget.dataset.id;
-    wx.navigateTo({ url: '/pages/tools/tool?id=' + id });
+    wx.navigateTo({ url: '/pages/tools/tool/index?id=' + id });
   }
 });
