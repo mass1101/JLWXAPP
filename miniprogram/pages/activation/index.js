@@ -1,7 +1,6 @@
 const act = require('../../services/activation');
 const st = require('../../services/storage');
 const { CHAMELEON_COMMANDS } = require('../../utils/constants');
-const app = getApp();
 
 Page({
   data: {
@@ -17,6 +16,7 @@ Page({
   },
 
   onShow() {
+    const app = getApp();
     const bleService = app.globalData.bleService;
     const activated = act.isActivated();
     this.setData({ activated });
@@ -65,6 +65,7 @@ Page({
   },
 
   async activateDevice() {
+    const app = getApp();
     const bleService = app.globalData.bleService;
     if (!bleService || !bleService.isConnected) {
       wx.showToast({ title: '请先连接设备', icon: 'none' });
@@ -99,6 +100,7 @@ Page({
   },
 
   async savePollingDelay() {
+    const app = getApp();
     const bleService = app.globalData.bleService;
     if (!bleService || !bleService.isConnected) {
       wx.showToast({ title: '请先连接设备', icon: 'none' });
@@ -139,7 +141,7 @@ Page({
         if (res.confirm) {
           wx.setStorageSync('app_activated', false);
           wx.setStorageSync('app_activated_chip_id', '');
-          app.globalData.slotCount = 8;
+          getApp().globalData.slotCount = 8;
           this.setData({ activated: false });
           wx.showToast({ title: '已撤销激活' });
         }

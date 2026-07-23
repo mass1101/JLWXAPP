@@ -1,5 +1,4 @@
 const act = require('../../services/activation');
-const app = getApp();
 
 Page({
   data: {
@@ -10,6 +9,7 @@ Page({
   },
 
   onShow() {
+    const app = getApp();
     const activated = act.isActivated();
     const bleService = app.globalData.bleService;
     const connected = bleService ? bleService.isConnected : false;

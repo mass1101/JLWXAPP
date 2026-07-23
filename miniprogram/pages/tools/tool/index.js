@@ -1,6 +1,5 @@
 const { CHAMELEON_COMMANDS } = require('../../../utils/constants');
 const { bytesToHex } = require('../../../utils/hex');
-const app = getApp();
 
 const TOOL_CONFIGS = {
   'hf14a-sniff': { name: 'HF14A 嗅探', desc: '抓取高频14A通信数据', cmd: CHAMELEON_COMMANDS.HF14A_SNIFF, stopCmd: CHAMELEON_COMMANDS.HF14A_SNIFF_STOP, hasDuration: true },
@@ -33,7 +32,7 @@ Page({
   },
 
   onShow() {
-    const bleService = app.globalData.bleService;
+    const bleService = getApp().globalData.bleService;
     const connected = bleService ? bleService.isConnected : false;
     this.setData({ connected });
 
@@ -45,7 +44,7 @@ Page({
   },
 
   async execute() {
-    const bleService = app.globalData.bleService;
+    const bleService = getApp().globalData.bleService;
     if (!bleService || !bleService.isConnected) {
       wx.showToast({ title: '请先连接设备', icon: 'none' });
       return;
@@ -135,7 +134,7 @@ Page({
   },
 
   onConnectionStateChanged() {
-    const bleService = app.globalData.bleService;
+    const bleService = getApp().globalData.bleService;
     this.setData({ connected: bleService ? bleService.isConnected : false });
   },
 

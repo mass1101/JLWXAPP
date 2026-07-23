@@ -1,7 +1,6 @@
 const act = require('../../services/activation');
 const st = require('../../services/storage');
 const { CHAMELEON_COMMANDS, BLE_UUIDS } = require('../../utils/constants');
-const app = getApp();
 
 const FW_80SLOT_URL = 'https://raw.githubusercontent.com/RfidResearchGroup/ChameleonUltra/main/firmware/ChameleonUltra-80Slots.bin';
 
@@ -22,6 +21,8 @@ Page({
   },
 
   onShow() {
+    const app = getApp();
+    const app = getApp();
     const bleService = app.globalData.bleService;
     const connected = bleService ? bleService.isConnected : false;
     const activated = act.isActivated();
@@ -68,6 +69,7 @@ Page({
   },
 
   async startDFU() {
+    const app = getApp();
     const bleService = app.globalData.bleService;
     if (!bleService || !bleService.isConnected) {
       wx.showToast({ title: '请先连接设备', icon: 'none' });
