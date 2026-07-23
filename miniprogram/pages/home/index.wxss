@@ -1,0 +1,24 @@
+@import '../../app.wxss';
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 16px 8px;
+}
+.logo { font-size: 22px; font-weight: 700; color: #65E8FF; }
+.status { font-size: 13px; }
+.connected { color: #3AD9F7; }
+.disconnected { color: #6D8090; }
+.device-info { padding: 14px 16px; margin: 0 12px 12px; }
+.stat-bulb { width: 8px; height: 8px; border-radius: 50%; }
+.stat-bulb.on { background: #3AD9F7; box-shadow: 0 0 6px #3AD9F7; }
+.stat-bulb.off { background: #6D8090; }
+.action-row { display: flex; gap: 8px; padding: 8px 16px; flex-wrap: wrap; }
+.list-panel { margin: 8px 12px; padding: 12px; max-height: 240px; overflow-y: auto; }
+.list-header { color: #6D8090; font-size: 12px; margin-bottom: 8px; }
+.list-item { padding: 10px 0; border-bottom: 1px solid #1F3B55; }
+.rssi { color: #3AD9F7; font-size: 12px; }
+.dev-name { color: #E0F0FF; font-size: 14px; display: block; }
+.dev-id { color: #6D8090; font-size: 11px; }
+.quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px 12px; }
+.btn-quick { text-align: center; padding: 16px 12px; border-radius: 10px; font-size: 15px; font-weight: 600; }

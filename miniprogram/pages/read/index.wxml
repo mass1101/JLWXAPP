@@ -1,0 +1,42 @@
+<!-- pages/read/index.wxml -->
+<wxs module="c" src="../../theme/colors.wxs" />
+<view class="page page-dark">
+  <view class="page-title">读卡</view>
+  <text class="mono-label pad-h">扫描并读取卡片信息</text>
+
+  <view wx:if="{{!ble.connected}}" class="empty-tip">请先连接设备</view>
+
+  <block wx:if="{{ble.connected}}">
+    <view class="panel-bg mode-select">
+      <view class="row gap-sm v-center">
+        <view class="chip {{mode === 'hf' ? 'active' : ''}}" bindtap="setMode" data-mode="hf"><text>高频 HF</text></view>
+        <view class="chip {{mode === 'lf' ? 'active' : ''}}" bindtap="setMode" data-mode="lf"><text>低频 LF</text></view>
+        <view class="chip {{mode === 'both' ? 'active' : ''}}" bindtap="setMode" data-mode="both"><text>双频</text></view>
+      </view>
+      <view class="row gap-sm mt-sm">
+        <text class="mono-label">卡槽: </text>
+        <picker range="{{slotRange}}" value="{{slotIndex}}" bindchange="onSlotPick">
+          <text class="picker-link">槽位 #{{slotIndex + 1}}</text>
+        </picker>
+      </view>
+    </view>
+
+    <view class="action-row">
+      <button class="btn-cyan" bindtap="startRead" loading="{{reading}}">
+        {{reading ? '读取中...' : '\u2316 开始读卡'}}
+      </button>
+      <button class="btn-outline" bindtap="stopRead">停止</button>
+    </view>
+
+    <view wx:if="{{cardData}}" class="panel-bg result-panel">
+      <text class="result-title">读取结果</text>
+      <scroll-view scroll-y class="result-scroll">
+        <text class="mono-text">{{cardData}}</text>
+      </scroll-view>
+      <view class="row gap-sm mt-sm">
+        <button class="btn-outline-sm" bindtap="copyResult">复制</button>
+        <button class="btn-gold-sm" bindtap="saveResult">保存到卡库</button>
+      </view>
+    </view>
+  </block>
+</view>

@@ -1,0 +1,33 @@
+<!-- pages/slots/detail.wxml -->
+<wxs module="c" src="../../theme/colors.wxs" />
+<view class="page page-dark">
+  <view class="page-title">卡槽详情 #{{index}}</view>
+
+  <view class="panel-bg form-panel">
+    <view class="form-item">
+      <text class="form-label">别名</text>
+      <input class="input-dark" value="{{nickname}}" bindinput="onNickname" placeholder="输入别名" maxlength="20" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">高频类型</text>
+      <input class="input-dark" value="{{hfType}}" bindinput="onHfType" placeholder="MIFARE Classic 1K" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">低频类型</text>
+      <input class="input-dark" value="{{lfType}}" bindinput="onLfType" placeholder="EM4x05" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">高频启用</text>
+      <switch checked="{{hfEnabled}}" bindchange="onHfEnabled" color="#3AD9F7" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">低频启用</text>
+      <switch checked="{{lfEnabled}}" bindchange="onLfEnabled" color="#3AD9F7" />
+    </view>
+  </view>
+
+  <view class="action-row">
+    <button class="btn-cyan" bindtap="saveSlot">保存</button>
+    <button class="btn-outline" bindtap="goBack">返回</button>
+  </view>
+</view>

@@ -1,0 +1,33 @@
+<!-- pages/dictionary/index.wxml -->
+<wxs module="c" src="../../theme/colors.wxs" />
+<view class="page page-dark">
+  <view class="page-title">词典管理</view>
+  <text class="mono-label pad-h">管理密钥和卡片类型词典</text>
+  <view class="tabs-row pad-h">
+    <text class="tabchip {{tab === 'keys' ? 'active' : ''}}" bindtap="onTab" data-tab="keys">密钥词典</text>
+    <text class="tabchip {{tab === 'types' ? 'active' : ''}}" bindtap="onTab" data-tab="types">卡类型</text>
+  </view>
+  <view class="list-panel">
+    <view wx:if="{{tab === 'keys'}}">
+      <view class="dict-row row space-between v-center" wx:for="{{keyDict}}" wx:key="index">
+        <view><text class="dict-name">{{item.name}}</text><text class="mono-tag">{{item.value || '(空)'}}</text></view>
+        <text class="del-btn" bindtap="removeKey" data-index="{{index}}">删</text>
+      </view>
+      <view class="add-row">
+        <input class="input-dark" value="{{newKeyName}}" bindinput="onNewKeyName" placeholder="密钥名称" />
+        <input class="input-dark" value="{{newKeyValue}}" bindinput="onNewKeyValue" placeholder="HEX值" />
+        <button class="btn-outline-sm" bindtap="addKey">添加</button>
+      </view>
+    </view>
+    <view wx:if="{{tab === 'types'}}">
+      <view class="dict-row row space-between v-center" wx:for="{{typeDict}}" wx:key="index">
+        <text class="dict-name">{{item}}</text>
+        <text class="del-btn" bindtap="removeType" data-index="{{index}}">删</text>
+      </view>
+      <view class="add-row">
+        <input class="input-dark" value="{{newType}}" bindinput="onNewType" placeholder="卡类型名 (如 MIFARE Classic 1K)" />
+        <button class="btn-outline-sm" bindtap="addType">添加</button>
+      </view>
+    </view>
+  </view>
+</view>

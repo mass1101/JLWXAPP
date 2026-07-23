@@ -1,0 +1,64 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/slots/index",
+    "pages/slots/detail",
+    "pages/read/index",
+    "pages/write/index",
+    "pages/mine/index",
+    "pages/cards/index",
+    "pages/cards/detail",
+    "pages/dictionary/index",
+    "pages/settings/index",
+    "pages/dfu/index",
+    "pages/activation/index",
+    "pages/tools/index",
+    "pages/tools/tool",
+    "pages/about/index"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#0A1322",
+    "navigationBarTitleText": "巨龙",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#0A1322",
+    "backgroundTextStyle": "light"
+  },
+  "tabBar": {
+    "color": "#6D8090",
+    "selectedColor": "#3AD9F7",
+    "backgroundColor": "#0D1829",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页",
+        "iconPath": "assets/icons/home.png",
+        "selectedIconPath": "assets/icons/home-active.png"
+      },
+      {
+        "pagePath": "pages/slots/index",
+        "text": "卡槽管理",
+        "iconPath": "assets/icons/slots.png",
+        "selectedIconPath": "assets/icons/slots-active.png"
+      },
+      {
+        "pagePath": "pages/read/index",
+        "text": "读卡",
+        "iconPath": "assets/icons/read.png",
+        "selectedIconPath": "assets/icons/read-active.png"
+      },
+      {
+        "pagePath": "pages/write/index",
+        "text": "写卡",
+        "iconPath": "assets/icons/write.png",
+        "selectedIconPath": "assets/icons/write-active.png"
+      },
+      {
+        "pagePath": "pages/mine/index",
+        "text": "我的",
+        "iconPath": "assets/icons/mine.png",
+        "selectedIconPath": "assets/icons/mine-active.png"
+      }
+    ]
+  }
+}

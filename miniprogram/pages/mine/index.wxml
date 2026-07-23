@@ -1,0 +1,43 @@
+<!-- pages/mine/index.wxml -->
+<wxs module="c" src="../../theme/colors.wxs" />
+<view class="page page-dark">
+  <view class="page-title">我的</view>
+
+  <view class="panel-bg profile-card">
+    <view class="row v-center gap-sm">
+      <view class="avatar" />
+      <view>
+        <text class="profile-name">巨龙 用户</text>
+        <text class="mono-label">卡库 {{cardCount}} 张 | 历史 {{historyCount}} 条</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="menu-list">
+    <view class="menu-item" bindtap="goPage" data-page="cards">
+      <text>\u25A3 卡库</text>
+      <text class="menu-badge">{{cardCount}}</text>
+    </view>
+    <view class="menu-item" bindtap="goPage" data-page="dictionary">
+      <text>\u2261 词典管理</text>
+    </view>
+    <view class="menu-item" bindtap="goPage" data-page="settings">
+      <text>\u2699 设置</text>
+    </view>
+    <view class="menu-item" bindtap="goPage" data-page="dfu">
+      <text>\u21BB 固件升级</text>
+    </view>
+    <view class="menu-item" bindtap="goPage" data-page="activation">
+      <text>\u26BF 激活管理</text>
+    </view>
+    <view class="menu-item" bindtap="goPage" data-page="about">
+      <text>\u24D8 关于</text>
+    </view>
+  </view>
+
+  <view class="action-row pad-h">
+    <button class="btn-gold" bindtap="exportCards">导出卡库</button>
+    <button class="btn-outline" bindtap="importCards">导入卡库</button>
+    <button class="btn-outline trash-btn" bindtap="clearHistory">清除历史</button>
+  </view>
+</view>

@@ -1,0 +1,35 @@
+<wxs module="c" src="../../../theme/colors.wxs" />
+<view class="page page-dark">
+  <view class="page-title">{{toolName}}</view>
+  <text class="mono-label pad-h">{{toolDesc}}</text>
+
+  <view wx:if="{{!ble.connected}}" class="empty-tip">请先连接设备</view>
+
+  <block wx:if="{{ble.connected}}">
+    <view class="panel-bg tool-panel">
+      <view class="form-item-vert">
+        <text class="form-label">命令</text>
+        <view class="row gap-sm">
+          <input class="input-dark flex-1" value="{{command}}" bindinput="onCommand" placeholder="输入命令" />
+          <button class="btn-cyan-sm" bindtap="execute" loading="{{executing}}">执行</button>
+        </view>
+      </view>
+      <view class="form-item-vert">
+        <text class="form-label">参数 (JSON)</text>
+        <input class="input-dark" value="{{args}}" bindinput="onArgs" placeholder='{"slot":0,"block":0,"keyType":96}' />
+      </view>
+      <view class="row gap-sm mt-sm" wx:if="{{altCmd || stopCmd || writeCmd}}">
+        <button class="btn-outline-sm" wx:if="{{altCmd}}" bindtap="executeAlt">{{altCmd}}</button>
+        <button class="btn-outline-sm" wx:if="{{stopCmd}}" bindtap="stopOp">{{stopCmd}}</button>
+        <button class="btn-gold-sm" wx:if="{{writeCmd}}" bindtap="executeWrite">写入</button>
+      </view>
+      <view class="form-item-vert" wx:if="{{result !== null}}">
+        <text class="form-label">结果</text>
+        <scroll-view scroll-y class="result-scroll">
+          <text class="mono-text">{{result}}</text>
+        </scroll-view>
+        <button class="btn-outline-sm mt-sm" bindtap="copyResult">复制</button>
+      </view>
+    </view>
+  </block>
+</view>

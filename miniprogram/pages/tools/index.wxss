@@ -1,0 +1,6 @@
+@import '../../app.wxss';
+.tools-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 12px; }
+.tool-card { background: #142030; border: 1px solid #1F3B55; border-radius: 12px; padding: 16px 12px; text-align: center; }
+.tool-icon { font-size: 28px; display: block; margin-bottom: 6px; }
+.tool-name { color: #E0F0FF; font-size: 14px; font-weight: 600; display: block; }
+.tool-desc { color: #6D8090; font-size: 11px; display: block; margin-top: 4px; }

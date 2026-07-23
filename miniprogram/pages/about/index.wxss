@@ -1,0 +1,11 @@
+@import '../../app.wxss';
+.about-header { text-align: center; padding: 40px 0 20px; }
+.about-logo { width: 64px; height: 64px; line-height: 64px; background: linear-gradient(135deg, #3AD9F7, #FFD700); border-radius: 16px; color: #0A1628; font-size: 22px; font-weight: 700; margin: 0 auto 10px; }
+.about-name { color: #65E8FF; font-size: 18px; font-weight: 700; display: block; }
+.about-ver { color: #6D8090; font-size: 13px; display: block; margin-top: 4px; }
+.about-section { margin: 8px 16px; padding: 14px; background: #142030; border-radius: 10px; border: 1px solid #1F3B55; }
+.sec-title { color: #65E8FF; font-size: 13px; margin-bottom: 8px; display: block; }
+.info-row { display: flex; justify-content: space-between; padding: 4px 0; }
+.info-label { color: #6D8090; font-size: 13px; min-width: 50px; }
+.info-val { color: #BEDBF0; font-size: 13px; }
+.link { color: #65E8FF; text-decoration: underline; }

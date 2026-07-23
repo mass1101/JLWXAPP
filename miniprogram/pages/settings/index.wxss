@@ -1,0 +1,8 @@
+@import '../../app.wxss';
+.form-panel { margin: 12px; padding: 12px; }
+.form-sec-title { color: #65E8FF; font-size: 13px; margin: 12px 0 6px; text-transform: uppercase; }
+.form-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #1F3B55; }
+.form-label { color: #BEDBF0; font-size: 14px; }
+.input-dark { background: #0A1628; color: #E0F0FF; border: 1px solid #1F3B55; border-radius: 6px; padding: 6px 10px; font-size: 14px; text-align: right; }
+.input-sm { width: 60px; }
+.picker-link { color: #65E8FF; font-size: 13px; text-decoration: underline; }

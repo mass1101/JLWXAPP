@@ -1,0 +1,25 @@
+<!-- pages/about/index.wxml -->
+<wxs module="c" src="../../theme/colors.wxs" />
+<view class="page page-dark">
+  <view class="about-header">
+    <view class="about-logo">PM3</view>
+    <text class="about-name">巨龙</text>
+    <text class="about-ver">v{{version}}</text>
+  </view>
+
+  <view class="about-section">
+    <text class="sec-title">项目信息</text>
+    <view class="info-row"><text class="info-label">版本</text><text class="info-val">{{version}}</text></view>
+    <view class="info-row"><text class="info-label">描述</text><text class="info-val">巨龙 微信小程序助手，支持 BLE 连接、读卡、写卡、卡槽管理等功能</text></view>
+  </view>
+
+  <view class="about-section">
+    <text class="sec-title">开源协议</text>
+    <text class="info-val">MIT License</text>
+  </view>
+
+  <view class="about-section">
+    <text class="sec-title">开源地址</text>
+    <text class="info-val link" bindtap="openRepo">https://github.com/proxmark3-miniapp/PM3Assistant</text>
+  </view>
+</view>

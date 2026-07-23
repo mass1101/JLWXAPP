@@ -1,0 +1,14 @@
+<!-- pages/tools/index.wxml -->
+<wxs module="c" src="../../theme/colors.wxs" />
+<view class="page page-dark">
+  <view class="page-title">工具箱</view>
+  <text class="mono-label pad-h">实用 RFID/NFC 工具</text>
+
+  <view class="tools-grid">
+    <view class="tool-card" wx:for="{{tools}}" wx:key="id" bindtap="onToolTap" data-id="{{item.id}}">
+      <text class="tool-icon">{{item.icon}}</text>
+      <text class="tool-name">{{item.name}}</text>
+      <text class="tool-desc">{{item.desc}}</text>
+    </view>
+  </view>
+</view>

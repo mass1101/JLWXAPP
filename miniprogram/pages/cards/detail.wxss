@@ -1,0 +1,5 @@
+@import '../../app.wxss';
+.detail-panel { margin: 12px; padding: 14px; }
+.detail-id { color: #65E8FF; font-size: 16px; font-weight: 600; display: block; margin-bottom: 4px; }
+.detail-type, .detail-date { color: #87A8C0; font-size: 13px; display: block; margin-bottom: 4px; }
+.detail-scroll { background: #0A1628; border: 1px solid #1F3B55; border-radius: 8px; padding: 10px; max-height: 300px; margin-top: 10px; }

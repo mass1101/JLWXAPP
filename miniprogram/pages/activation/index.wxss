@@ -1,0 +1,13 @@
+@import '../../app.wxss';
+.act-panel { margin: 12px; padding: 14px; }
+.green { color: #3AD9F7; }
+.red { color: #FF6B6B; }
+.license-item { padding: 10px 0; border-bottom: 1px solid #1F3B55; }
+.license-name { color: #E0F0FF; font-size: 14px; font-weight: 600; display: block; }
+.license-exp { color: #6D8090; font-size: 12px; }
+.form-item-vert { display: flex; flex-direction: column; padding: 10px 0; border-bottom: 1px solid #1F3B55; }
+.area { font-size: 12px; min-height: 60px; padding: 8px; }
+.trash-btn { color: #FF6B6B; border-color: #FF6B6B; }
+.polling-msg { margin-top: 8px; font-size: 12px; padding: 6px 10px; border-radius: 6px; }
+.polling-msg.green { color: #3AD9F7; background: rgba(58,217,247,0.08); }
+.polling-msg.red { color: #FF6B6B; background: rgba(255,107,107,0.08); }

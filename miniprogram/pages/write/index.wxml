@@ -1,0 +1,69 @@
+<!-- pages/write/index.wxml -->
+<wxs module="c" src="../../theme/colors.wxs" />
+<view class="page page-dark">
+  <view class="page-title">写卡</view>
+  <text class="mono-label pad-h">将数据写入卡片</text>
+
+  <view wx:if="{{!ble.connected}}" class="empty-tip">请先连接设备</view>
+
+  <block wx:if="{{ble.connected}}">
+    <view class="panel-bg form-panel">
+      <view class="form-item">
+        <text class="form-label">模式</text>
+        <view class="row gap-sm">
+          <text class="chip {{writeMode === 'hf' ? 'active' : ''}}" bindtap="onWriteMode" data-mode="hf">高频</text>
+          <text class="chip {{writeMode === 'lf' ? 'active' : ''}}" bindtap="onWriteMode" data-mode="lf">低频</text>
+        </view>
+      </view>
+      <view class="form-item">
+        <text class="form-label">目标卡槽</text>
+        <picker range="{{slotRange}}" value="{{slotIndex}}" bindchange="onSlotPick">
+          <text class="picker-link">#{{slotIndex + 1}}</text>
+        </picker>
+      </view>
+      <view class="form-item">
+        <text class="form-label">数据来源</text>
+        <view class="row gap-sm">
+          <text class="chip {{source === 'manual' ? 'active' : ''}}" bindtap="onSource" data-source="manual">手动</text>
+          <text class="chip {{source === 'history' ? 'active' : ''}}" bindtap="onSource" data-source="history">历史</text>
+          <text class="chip {{source === 'library' ? 'active' : ''}}" bindtap="onSource" data-source="library">卡库</text>
+        </view>
+      </view>
+      <view class="form-item-vert" wx:if="{{source === 'manual'}}">
+        <text class="form-label">数据 (HEX)</text>
+        <textarea class="input-dark area" value="{{hexData}}" bindinput="onHexData" placeholder="输入十六进制数据" auto-height maxlength="-1" />
+      </view>
+      <view class="form-item-vert" wx:if="{{source === 'history'}}">
+        <text class="form-label">选择历史记录</text>
+        <picker range="{{historyRange}}" bindchange="onHistoryPick">
+          <text class="picker-link">{{historyLabel || '请选择'}}</text>
+        </picker>
+      </view>
+      <view class="form-item-vert" wx:if="{{source === 'library'}}">
+        <text class="form-label">选择卡库条目</text>
+        <picker range="{{libraryRange}}" bindchange="onLibraryPick">
+          <text class="picker-link">{{libraryLabel || '请选择'}}</text>
+        </picker>
+      </view>
+
+      <view class="row gap-sm mt-sm" wx:if="{{writeMode === 'hf'}}">
+        <text class="mono-label">块号: </text>
+        <input class="input-dark input-sm" value="{{blockNum}}" bindinput="onBlockNum" placeholder="0" type="number" />
+        <text class="mono-label">密钥类型: </text>
+        <picker range="{{keyTypes}}" bindchange="onKeyType" value="{{keyTypeIdx}}">
+          <text class="picker-link">{{keyTypes[keyTypeIdx]}}</text>
+        </picker>
+      </view>
+    </view>
+
+    <view class="action-row">
+      <button class="btn-gold" bindtap="startWrite" loading="{{writing}}">{{writing ? '写入中...' : '\u270E 写入'}}</button>
+      <button class="btn-outline" bindtap="previewData">预览</button>
+    </view>
+
+    <view wx:if="{{writeLog}}" class="panel-bg log-panel">
+      <text class="result-title">写入结果</text>
+      <text class="mono-text">{{writeLog}}</text>
+    </view>
+  </block>
+</view>

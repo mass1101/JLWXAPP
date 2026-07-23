@@ -1,0 +1,17 @@
+@import '../../app.wxss';
+.dfu-panel { margin: 12px; padding: 14px; }
+.fw-file-info { margin-top: 8px; padding: 8px 12px; background: #0A1628; border-radius: 6px; border: 1px solid #1F3B55; }
+.steps-panel { margin-top: 0; }
+.step { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+.step-ind { width: 20px; height: 20px; border-radius: 50%; text-align: center; line-height: 20px; font-size: 11px; color: #6D8090; background: #2A4A6A; }
+.step-ind.done { background: #3AD9F7; color: #0A1628; }
+.step-ind.active { background: #FFD700; color: #0A1628; }
+.step-ind.error { background: #FF6B6B; color: #FFF; }
+.step-text { color: #6D8090; font-size: 13px; }
+.step-text.done { color: #3AD9F7; }
+.step-text.active { color: #FFD700; }
+.step-text.error { color: #FF6B6B; }
+.error-panel { margin: 12px; padding: 10px; background: rgba(255,107,107,0.1); border: 1px solid #FF6B6B !important; }
+.error-text { color: #FF6B6B; font-size: 13px; }
+.dfu-url { color: #65E8FF; font-size: 11px; word-break: break-all; background: #0A1628; padding: 8px; border-radius: 6px; border: 1px solid #1F3B55; flex: 1; }
+.disabled-btn { opacity: 0.4; }

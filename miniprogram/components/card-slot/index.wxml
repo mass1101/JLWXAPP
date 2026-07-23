@@ -1,0 +1,13 @@
+<wxs module="c" src="../../../theme/colors.wxs" />
+
+<view class="card-slot {{connected ? '' : 'disabled'}}">
+  <view class="slot-header">
+    <text class="slot-index">#{{index + 1}}</text>
+    <view class="slot-status {{enabled ? 'active' : 'inactive'}}" />
+  </view>
+  <view class="slot-types">
+    <text class="tag-cyan slot-tag">{{hfType || '--'}}</text>
+    <text class="tag-gold slot-tag">{{lfType || '--'}}</text>
+  </view>
+  <text wx:if="{{nickname}}" class="slot-nick">{{nickname}}</text>
+</view>

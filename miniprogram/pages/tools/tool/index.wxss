@@ -1,0 +1,5 @@
+@import '../../../app.wxss';
+.tool-panel { margin: 12px; padding: 14px; }
+.flex-1 { flex: 1; }
+.result-scroll { background: #0A1628; border: 1px solid #1F3B55; border-radius: 8px; padding: 10px; max-height: 260px; }
+.btn-cyan-sm { background: #3AD9F7; color: #0A1628; border: none; border-radius: 6px; padding: 6px 16px; font-size: 13px; }

@@ -1,0 +1,6 @@
+@import '../../app.wxss';
+.form-panel { margin: 12px; padding: 12px; }
+.form-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #1F3B55; }
+.form-label { color: #BEDBF0; font-size: 14px; min-width: 70px; }
+.input-dark { flex: 1; background: #0A1628; color: #E0F0FF; border: 1px solid #1F3B55; border-radius: 6px; padding: 6px 10px; font-size: 14px; text-align: right; }
+.action-row { display: flex; gap: 10px; padding: 16px 12px; }

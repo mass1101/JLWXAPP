@@ -1,0 +1,4 @@
+@import '../../app.wxss';
+.list-panel { margin: 12px; max-height: 70vh; overflow-y: auto; }
+.card-list-item { background: #142030; border: 1px solid #1F3B55; border-radius: 10px; padding: 12px; margin-bottom: 8px; }
+.card-name { color: #E0F0FF; font-size: 15px; display: block; }

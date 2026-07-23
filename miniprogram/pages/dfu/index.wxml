@@ -1,0 +1,67 @@
+<!-- pages/dfu/index.wxml -->
+<wxs module="c" src="../../theme/colors.wxs" />
+<view class="page page-dark">
+  <view class="page-title">固件升级</view>
+  <text class="mono-label pad-h">更新巨龙设备固件</text>
+
+  <view wx:if="{{!ble.connected}}" class="empty-tip">请先连接设备</view>
+
+  <block wx:if="{{ble.connected}}">
+    <view class="panel-bg dfu-panel">
+      <view class="form-item">
+        <text class="form-label">当前固件: {{fwVersion || '未知'}}</text>
+      </view>
+      <view class="form-item">
+        <text class="form-label">设备型号: {{deviceModel || '未知'}}</text>
+      </view>
+      <view class="form-item">
+        <text class="form-label">Bootloader: {{bootVersion || '未知'}}</text>
+      </view>
+    </view>
+
+    <!-- 官方固件升级 -->
+    <view class="panel-bg dfu-panel">
+      <view class="form-sec-title">官方固件</view>
+      <view class="action-row">
+        <button class="btn-gold" bindtap="selectFirmware">选择固件文件</button>
+      </view>
+      <view wx:if="{{fwSource === 'local' && fwFile}}" class="fw-file-info">
+        <text class="mono-label">已选择: {{fwFile.name}} ({{fwFile.size}}B)</text>
+      </view>
+    </view>
+
+    <!-- 80卡槽固件升级 -->
+    <view class="panel-bg dfu-panel">
+      <view class="form-sec-title">80卡槽固件</view>
+      <view class="action-row">
+        <button class="btn-cyan {{activated ? '' : 'disabled-btn'}}" bindtap="start80SlotDFU" disabled="{{!activated}}">
+          {{activated ? '升级80卡槽固件' : '未激活不可用'}}
+        </button>
+      </view>
+      <view wx:if="{{fwSource === '80slot'}}" class="fw-file-info">
+        <text class="mono-label">80卡槽固件已就绪</text>
+      </view>
+    </view>
+
+    <!-- 升级步骤 (共享) -->
+    <view wx:if="{{steps.length}}" class="panel-bg dfu-panel">
+      <view class="steps-panel">
+        <view class="step" wx:for="{{steps}}" wx:key="index">
+          <view class="step-ind {{item.status}}">\u2713</view>
+          <text class="step-text {{item.status}}">{{item.text}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{errorMsg}}" class="panel-bg error-panel">
+      <text class="error-text">\u26A0 {{errorMsg}}</text>
+    </view>
+
+    <view class="action-row pad-h">
+      <button class="btn-cyan" bindtap="startDFU" loading="{{inProgress}}" wx:if="{{fwSource}}">
+        {{inProgress ? '升级中...' : '开始升级'}}
+      </button>
+      <button class="btn-outline" bindtap="cancelDFU" wx:if="{{fwSource}}">取消</button>
+    </view>
+  </block>
+</view>

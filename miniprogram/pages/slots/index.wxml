@@ -1,0 +1,23 @@
+<!-- pages/slots/index.wxml -->
+<wxs module="c" src="../../theme/colors.wxs" />
+<view class="page page-dark">
+  <view class="page-title">卡槽管理</view>
+  <text class="mono-label pad-h">硬件卡槽状态</text>
+
+  <view wx:if="{{!ble.connected}}" class="empty-tip">请先连接设备</view>
+
+  <view class="slots-grid" wx:if="{{ble.connected}}">
+    <card-slot wx:for="{{slots}}" wx:key="index"
+      index="{{index}}" hfType="{{item.hfType}}" lfType="{{item.lfType}}"
+      hfEnabled="{{item.hfEnabled}}" lfEnabled="{{item.lfEnabled}}"
+      nickname="{{item.nickname}}" connected="{{ble.connected}}"
+      bindtap="onSlotTap" data-index="{{index}}" />
+  </view>
+
+  <view class="panel-bg pad-h" wx:if="{{ble.connected}}">
+    <view class="row space-between v-center">
+      <text class="mono-label">GPO: {{gpio.gpo ? 'ON' : 'OFF'}}</text>
+      <button class="btn-outline-sm" bindtap="toggleGPO">切换 GPO</button>
+    </view>
+  </view>
+</view>

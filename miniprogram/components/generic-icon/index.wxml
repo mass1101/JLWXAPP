@@ -1,0 +1,1 @@
+<text class="gi-icon gi-{{type}}" style="font-size:{{size}}px; color:{{color}}">{{symbol}}</text>

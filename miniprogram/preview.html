@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>巨龙 Assistant - Preview</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0A1322;
+  --card-bg: #142030;
+  --card-border: #1F3B55;
+  --cyan: #3AD9F7;
+  --cyan-dark: #1FB7E5;
+  --cyan-text: #65E8FF;
+  --gold: #F2B73D;
+  --gold2: #FFD700;
+  --green: #2ECC71;
+  --red: #E74C3C;
+  --text: #A9B7C6;
+  --text-muted: #6D8090;
+  --text-bright: #E0F0FF;
+  --tab-bg: #0D1829;
+  --progress-bg: #1A2A3A;
+  --shadow-cyan: rgba(58,217,247,0.08);
+  --shadow-cyan-lg: rgba(58,217,247,0.15);
+  --shadow-gold: rgba(242,183,61,0.12);
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'HarmonyOS Sans', sans-serif;
+  font-size: 14px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+#app { flex: 1; display: flex; flex-direction: column; max-width: 420px; margin: 0 auto; width: 100%; position: relative; }
+
+/* Pages container */
+#pages { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 60px; }
+
+/* Page containers */
+.page { display: none; min-height: 100%; }
+.page.active { display: block; }
+
+/* Panel */
+.panel {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: 0 0 8px var(--shadow-cyan);
+  padding: 14px 16px;
+  margin: 8px 12px;
+}
+
+/* Page title */
+.page-title { color: var(--cyan-text); font-size: 20px; font-weight: 700; padding: 20px 16px 4px; }
+
+/* Mono label */
+.mono-label { font-size: 12px; color: var(--text-muted); }
+.pad-h { padding: 0 16px; }
+.mt-sm { margin-top: 8px; }
+.mt-md { margin-top: 14px; }
+.gap-sm { gap: 8px; }
+
+/* Top bar */
+.top-bar { display: flex; justify-content: space-between; align-items: center; padding: 20px 16px 8px; }
+.logo { font-size: 22px; font-weight: 700; color: var(--cyan-text); }
+.status-tag { font-size: 13px; }
+.status-tag.on { color: var(--cyan); }
+.status-tag.off { color: var(--text-muted); }
+
+/* BLE indicator glowing dot */
+.ble-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+.ble-dot.on { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+.ble-dot.off { background: var(--text-muted); }
+
+/* Stat bulb */
+.stat-bulb { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.stat-bulb.on { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+.stat-bulb.off { background: var(--text-muted); }
+
+/* Row flex helpers */
+.row { display: flex; align-items: center; }
+.space-between { justify-content: space-between; }
+.v-center { align-items: center; }
+.flex-wrap { flex-wrap: wrap; }
+
+/* Buttons */
+.btn {
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  padding: 10px 20px;
+  display: inline-block;
+  transition: background 0.2s, opacity 0.2s;
+  font-family: inherit;
+}
+.btn:active { opacity: 0.8; }
+.btn-cyan { background: var(--cyan); color: var(--bg); }
+.btn-gold { background: var(--gold); color: var(--bg); }
+.btn-outline { background: transparent; color: var(--cyan); border: 1px solid var(--cyan); }
+.btn-outline-gold { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
+.btn-sm { font-size: 12px; padding: 6px 14px; }
+.btn-block { display: block; width: 100%; }
+
+/* Action row */
+.action-row { display: flex; gap: 8px; padding: 8px 16px; flex-wrap: wrap; }
+
+/* Device info */
+.device-info .info-row {
+  display: flex; justify-content: space-between; align-items: center;
+  color: var(--text);
+  font-size: 12px;
+  margin-top: 6px;
+}
+.device-info .info-label { color: var(--text-muted); font-family: monospace; font-size: 11px; }
+
+/* Scan list */
+.list-panel { margin: 8px 12px; padding: 12px; max-height: 240px; overflow-y: auto; }
+.list-header { color: var(--text-muted); font-size: 12px; margin-bottom: 8px; }
+.list-device { padding: 10px 0; border-bottom: 1px solid var(--card-border); cursor: pointer; }
+.list-device:last-child { border-bottom: none; }
+.dev-name { color: var(--text-bright); font-size: 14px; display: block; }
+.dev-id { color: var(--text-muted); font-size: 11px; display: block; }
+.dev-rssi { color: var(--cyan); font-size: 12px; }
+
+/* Quick actions grid */
+.quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px 12px; }
+.quick-act { text-align: center; padding: 18px 12px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+.quick-act:active { opacity: 0.8; }
+
+/* Empty tip */
+.empty-tip { text-align: center; padding: 40px 16px; color: var(--text-muted); font-size: 14px; }
+
+/* Slots grid */
+.slots-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 12px; }
+
+/* Card slot */
+.card-slot {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 0 8px rgba(58,217,247,0.06);
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.card-slot:hover { border-color: var(--cyan); box-shadow: 0 0 14px var(--shadow-cyan-lg); }
+.card-slot .slot-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.card-slot .slot-index { color: var(--cyan-text); font-size: 15px; font-weight: 700; }
+.card-slot .slot-dot { width: 10px; height: 10px; border-radius: 50%; }
+.card-slot .slot-dot.active { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+.card-slot .slot-dot.inactive { background: var(--text-muted); }
+.card-slot .slot-types { display: flex; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
+.card-slot .slot-nick { color: var(--text-muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Tags */
+.tag { border-radius: 4px; padding: 2px 8px; font-size: 12px; display: inline-block; }
+.tag-cyan { background: rgba(58,217,247,0.12); color: var(--cyan); }
+.tag-gold { background: rgba(242,183,61,0.12); color: var(--gold); }
+.tag-green { background: rgba(46,204,113,0.12); color: var(--green); }
+.tag-red { background: rgba(231,76,60,0.12); color: var(--red); }
+
+/* Chip selectors */
+.chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #2A4A6A;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+.chip.active { background: var(--cyan); color: var(--bg); border-color: var(--cyan); }
+
+/* Picker link */
+.picker { color: var(--cyan-text); font-size: 13px; text-decoration: underline; cursor: pointer; }
+
+/* Result panel */
+.result-title { color: var(--cyan-text); font-size: 14px; margin-bottom: 8px; display: block; }
+.result-scroll {
+  background: #0A1628;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 10px;
+  max-height: 280px;
+  overflow-y: auto;
+  font-family: 'Courier New', 'Source Code Pro', 'Menlo', monospace;
+  font-size: 12px;
+  color: var(--text-bright);
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+/* Form */
+.form-panel { margin: 12px; padding: 12px; }
+.form-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--card-border); }
+.form-item-col { display: flex; flex-direction: column; padding: 10px 0; border-bottom: 1px solid var(--card-border); }
+.form-label { color: #BEDBF0; font-size: 14px; margin-bottom: 4px; }
+.hex-area {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 10px;
+  color: var(--text);
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  min-height: 80px;
+  width: 100%;
+  resize: vertical;
+}
+.hex-area:focus { border-color: var(--cyan); outline: none; }
+.input-sm {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: var(--text);
+  font-size: 13px;
+  width: 50px;
+  text-align: center;
+  font-family: monospace;
+}
+.input-sm:focus { border-color: var(--cyan); outline: none; }
+
+/* Profile */
+.profile-card { margin: 12px; padding: 16px; }
+.avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--cyan), var(--gold2));
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+.profile-name { color: var(--text-bright); font-size: 16px; font-weight: 600; display: block; }
+.profile-meta { color: var(--text-muted); font-size: 12px; }
+
+/* Menu list */
+.menu-list { margin: 8px 12px; }
+.menu-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--card-border);
+  color: var(--text-bright);
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.menu-item:last-child { border-bottom: none; }
+.menu-item:hover { background: rgba(58,217,247,0.04); }
+.menu-badge {
+  background: var(--cyan);
+  color: var(--bg);
+  border-radius: 10px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Action row bottom */
+.action-bottom { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px; }
+
+/* Tab bar */
+.tab-bar {
+  display: flex;
+  background: var(--tab-bg);
+  border-top: 1px solid rgba(31,59,85,0.5);
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
+  height: 50px;
+}
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  transition: color 0.2s;
+  user-select: none;
+  gap: 2px;
+}
+.tab-item.active { color: var(--cyan); }
+.tab-icon { font-size: 18px; line-height: 1; }
+
+/* Animations */
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+.pulse { animation: pulse 1.5s ease-in-out infinite; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeIn 0.25s ease-out; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="pages">
+    <!-- 首页 -->
+    <div class="page active" id="page-home">
+      <div class="top-bar">
+        <span class="logo">巨龙</span>
+        <span class="status-tag off" id="ble-status">
+          <span class="ble-dot off"></span>未连接
+        </span>
+      </div>
+      <div class="panel device-info" id="device-panel" style="display:none;">
+        <div class="row space-between" style="margin-bottom:6px;">
+          <span class="info-label">设备型号: <span id="dev-model" style="color:var(--text);">巨龙 RDV4</span></span>
+          <span class="info-label">固件版本: <span id="dev-fw" style="color:var(--text);">v4.2.1</span></span>
+        </div>
+        <div class="row space-between" style="margin-top:6px;">
+          <span style="display:flex;align-items:center;gap:6px;">
+            <span class="mono-label">GPO</span>
+            <span class="stat-bulb on" id="gpo-bulb"></span>
+          </span>
+          <span style="display:flex;align-items:center;gap:6px;">
+            <span class="mono-label">GPI</span>
+            <span class="stat-bulb off" id="gpi-bulb"></span>
+          </span>
+          <span class="mono-label">电池: <span style="color:var(--text);" id="battery-level">87%</span></span>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-cyan" id="btn-connect">连接设备</button>
+        <button class="btn btn-outline-gold" id="btn-disconnect" style="display:none;">断开连接</button>
+        <button class="btn btn-outline" id="btn-scan">扫描设备</button>
+      </div>
+      <div class="panel list-panel" id="scan-list" style="display:none;">
+        <div class="list-header">附近设备 (0)</div>
+        <div id="scan-list-body"></div>
+      </div>
+      <div class="quick-actions">
+        <div class="quick-act btn-cyan" onclick="switchTab(2)">&#x2316; 读卡</div>
+        <div class="quick-act btn-gold" onclick="switchTab(3)">&#x270E; 写卡</div>
+        <div class="quick-act btn-outline" onclick="switchTab(1)">&#x25A6; 卡槽</div>
+        <div class="quick-act btn-outline" onclick="alert('工具页面')">&#x2699; 工具</div>
+      </div>
+    </div>
+
+    <!-- 卡槽管理 -->
+    <div class="page" id="page-slots">
+      <div class="page-title">卡槽管理</div>
+      <div class="mono-label pad-h">硬件卡槽状态</div>
+      <div class="slots-grid" id="slots-grid"></div>
+      <div class="panel" style="margin:8px 12px;">
+        <div class="row space-between">
+          <span class="mono-label">GPO: <span style="color:var(--text);" id="slots-gpo">ON</span></span>
+          <button class="btn btn-outline btn-sm" id="btn-toggle-gpo">切换 GPO</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 读卡 -->
+    <div class="page" id="page-read">
+      <div class="page-title">读卡</div>
+      <div class="mono-label pad-h">扫描并读取卡片信息</div>
+      <div class="panel" style="margin:12px;">
+        <div class="chip-row" style="margin-bottom:10px;">
+          <span class="chip active" data-mode="hf" id="read-chip-hf">高频 HF</span>
+          <span class="chip" data-mode="lf" id="read-chip-lf">低频 LF</span>
+          <span class="chip" data-mode="both" id="read-chip-both">双频</span>
+        </div>
+        <span class="mono-label">卡槽: <span class="picker" id="read-slot-pick">槽位 #1</span></span>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-cyan" id="btn-read-start">&#x2316; 开始读卡</button>
+        <button class="btn btn-outline btn-sm" id="btn-read-stop">停止</button>
+      </div>
+      <div class="panel" id="read-result" style="display:none; margin:12px;">
+        <span class="result-title">读取结果</span>
+        <div class="result-scroll" id="read-result-text"></div>
+        <div class="row gap-sm mt-sm">
+          <button class="btn btn-outline btn-sm" id="btn-copy">复制</button>
+          <button class="btn btn-gold btn-sm" id="btn-save-result">保存到卡库</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 写卡 -->
+    <div class="page" id="page-write">
+      <div class="page-title">写卡</div>
+      <div class="mono-label pad-h">将数据写入卡片</div>
+      <div class="panel form-panel">
+        <div class="form-item">
+          <span class="form-label">模式</span>
+          <div class="chip-row">
+            <span class="chip active" data-mode="hf" id="write-chip-hf">高频</span>
+            <span class="chip" data-mode="lf" id="write-chip-lf">低频</span>
+          </div>
+        </div>
+        <div class="form-item">
+          <span class="form-label">目标卡槽</span>
+          <span class="picker" id="write-slot-pick">#1</span>
+        </div>
+        <div class="form-item">
+          <span class="form-label">数据来源</span>
+          <div class="chip-row">
+            <span class="chip active" data-source="manual" id="src-manual">手动</span>
+            <span class="chip" data-source="history" id="src-history">历史</span>
+            <span class="chip" data-source="library" id="src-library">卡库</span>
+          </div>
+        </div>
+        <div class="form-item-col" id="manual-input">
+          <span class="form-label">数据 (HEX)</span>
+          <textarea class="hex-area" id="hex-data" placeholder="输入十六进制数据..."></textarea>
+        </div>
+        <div class="form-item" style="margin-top:10px;">
+          <span class="mono-label">块号: </span>
+          <input class="input-sm" id="block-num" type="number" value="0" min="0" max="255">
+          <span class="mono-label">密钥类型: </span>
+          <span class="picker" id="key-type-pick">Key A</span>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-gold" id="btn-write">&#x270E; 写入</button>
+        <button class="btn btn-outline btn-sm" id="btn-preview">预览</button>
+      </div>
+      <div class="panel" id="write-log" style="display:none; margin:12px;">
+        <span class="result-title">写入结果</span>
+        <div class="result-scroll" id="write-log-text"></div>
+      </div>
+    </div>
+
+    <!-- 我的 -->
+    <div class="page" id="page-mine">
+      <div class="page-title">我的</div>
+      <div class="panel profile-card">
+        <div class="row">
+          <div class="avatar"></div>
+          <div>
+            <span class="profile-name">巨龙 用户</span>
+            <span class="profile-meta">卡库 12 张 | 历史 48 条</span>
+          </div>
+        </div>
+      </div>
+      <div class="menu-list">
+        <div class="menu-item"><span>&#x25A3; 卡库</span><span class="menu-badge">12</span></div>
+        <div class="menu-item"><span>&#x2261; 词典管理</span><span style="color:var(--text-muted);font-size:14px;">&#x203A;</span></div>
+        <div class="menu-item"><span>&#x2699; 设置</span><span style="color:var(--text-muted);font-size:14px;">&#x203A;</span></div>
+        <div class="menu-item"><span>&#x21BB; 固件升级</span><span style="color:var(--text-muted);font-size:14px;">&#x203A;</span></div>
+        <div class="menu-item"><span>&#x26BF; 激活管理</span><span style="color:var(--text-muted);font-size:14px;">&#x203A;</span></div>
+        <div class="menu-item"><span>&#x24D8; 关于</span><span style="color:var(--text-muted);font-size:14px;">&#x203A;</span></div>
+      </div>
+      <div class="action-bottom">
+        <button class="btn btn-gold">导出卡库</button>
+        <button class="btn btn-outline">导入卡库</button>
+        <button class="btn btn-outline" style="color:#FF6B6B;border-color:#FF6B6B;">清除历史</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 标签栏 -->
+  <div class="tab-bar">
+    <div class="tab-item active" data-tab="0">
+      <span class="tab-icon">&#x2302;</span> 首页
+    </div>
+    <div class="tab-item" data-tab="1">
+      <span class="tab-icon">&#x25A6;</span> 卡槽管理
+    </div>
+    <div class="tab-item" data-tab="2">
+      <span class="tab-icon">&#x2316;</span> 读卡
+    </div>
+    <div class="tab-item" data-tab="3">
+      <span class="tab-icon">&#x270E;</span> 写卡
+    </div>
+    <div class="tab-item" data-tab="4">
+      <span class="tab-icon">&#x263A;</span> 我的
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var pageIds = ['page-home', 'page-slots', 'page-read', 'page-write', 'page-mine'];
+  var currentTab = 0;
+  var connected = false;
+
+  function switchTab(idx) {
+    currentTab = idx;
+    var pages = document.querySelectorAll('.page');
+    pages.forEach(function(p) { p.classList.remove('active'); });
+    document.getElementById(pageIds[idx]).classList.add('active');
+
+    var tabs = document.querySelectorAll('.tab-item');
+    tabs.forEach(function(t, i) {
+      t.classList.toggle('active', i === idx);
+    });
+  }
+
+  var tabItems = document.querySelectorAll('.tab-item');
+  tabItems.forEach(function(item) {
+    item.addEventListener('click', function() {
+      switchTab(parseInt(this.getAttribute('data-tab')));
+    });
+  });
+
+  /* ====== Connect / Disconnect simulation ====== */
+  function setConnected(state) {
+    connected = state;
+    var statusEl = document.getElementById('ble-status');
+    var dotEl = statusEl.querySelector('.ble-dot');
+    var devPanel = document.getElementById('device-panel');
+    var btnConn = document.getElementById('btn-connect');
+    var btnDisc = document.getElementById('btn-disconnect');
+
+    if (state) {
+      statusEl.innerHTML = '<span class="ble-dot on"></span>已连接';
+      statusEl.className = 'status-tag on';
+      dotEl = statusEl.querySelector('.ble-dot');
+      devPanel.style.display = '';
+      btnConn.style.display = 'none';
+      btnDisc.style.display = '';
+    } else {
+      statusEl.innerHTML = '<span class="ble-dot off"></span>未连接';
+      statusEl.className = 'status-tag off';
+      dotEl = statusEl.querySelector('.ble-dot');
+      devPanel.style.display = 'none';
+      btnConn.style.display = '';
+      btnDisc.style.display = 'none';
+    }
+    renderSlots();
+  }
+
+  document.getElementById('btn-connect').addEventListener('click', function() {
+    this.textContent = '连接中...';
+    this.disabled = true;
+    setTimeout(function() {
+      document.getElementById('btn-connect').textContent = '连接设备';
+      document.getElementById('btn-connect').disabled = false;
+      setConnected(true);
+    }, 1200);
+  });
+
+  document.getElementById('btn-disconnect').addEventListener('click', function() {
+    setConnected(false);
+  });
+
+  /* ====== Scan simulation ====== */
+  var scanResults = [
+    { name: '巨龙 RDV4', deviceId: 'A4:C1:38:XX:XX:01', RSSI: 42 },
+    { name: '巨龙', deviceId: 'B3:D2:49:XX:XX:02', RSSI: 58 },
+    { name: '巨龙 Easy', deviceId: 'C2:E3:5A:XX:XX:03', RSSI: 67 }
+  ];
+
+  document.getElementById('btn-scan').addEventListener('click', function() {
+    var list = document.getElementById('scan-list');
+    var body = document.getElementById('scan-list-body');
+    list.style.display = '';
+    list.querySelector('.list-header').textContent = '附近设备 (' + scanResults.length + ')';
+
+    var html = '';
+    scanResults.forEach(function(d) {
+      html += '<div class="list-device"><div class="row space-between">' +
+        '<div><span class="dev-name">' + d.name + '</span><span class="dev-id">' + d.deviceId + '</span></div>' +
+        '<span class="dev-rssi">-' + d.RSSI + 'dBm</span></div></div>';
+    });
+    body.innerHTML = html;
+
+    var items = body.querySelectorAll('.list-device');
+    items.forEach(function(item, i) {
+      item.addEventListener('click', function() {
+        if (!connected) {
+          document.getElementById('btn-connect').textContent = '连接中...';
+          document.getElementById('btn-connect').disabled = true;
+          setTimeout(function() {
+            document.getElementById('btn-connect').textContent = '连接设备';
+            document.getElementById('btn-connect').disabled = false;
+            setConnected(true);
+            list.style.display = 'none';
+          }, 1000);
+        }
+      });
+    });
+  });
+
+  /* ====== Card slots ====== */
+  var slotTypes = [
+    { hfType: 'MIFARE 1K', lfType: 'EM4100', nickname: '', enabled: true },
+    { hfType: 'NTAG215', lfType: '--', nickname: '门禁卡', enabled: true },
+    { hfType: '--', lfType: 'T5577', nickname: '', enabled: false },
+    { hfType: 'MIFARE 4K', lfType: 'HID Prox', nickname: '电梯卡', enabled: true },
+    { hfType: '--', lfType: '--', nickname: '', enabled: false },
+    { hfType: 'DESFire', lfType: 'EM4305', nickname: '', enabled: true },
+    { hfType: 'Ultralight', lfType: '--', nickname: '公交卡', enabled: true },
+    { hfType: '--', lfType: 'Indala', nickname: '', enabled: false }
+  ];
+
+  function renderSlots() {
+    var grid = document.getElementById('slots-grid');
+    var html = '';
+    slotTypes.forEach(function(s, i) {
+      var hfTag = s.hfType !== '--' ? '<span class="tag tag-cyan">' + s.hfType + '</span>' : '<span class="tag" style="background:rgba(58,217,247,0.06);color:#4A6A7A;">HF: --</span>';
+      var lfTag = s.lfType !== '--' ? '<span class="tag tag-gold">' + s.lfType + '</span>' : '<span class="tag" style="background:rgba(242,183,61,0.06);color:#6A5A3A;">LF: --</span>';
+      var nick = s.nickname ? '<div class="slot-nick">' + s.nickname + '</div>' : '';
+      html += '<div class="card-slot" style="' + (!connected ? 'opacity:0.5;' : '') + '">' +
+        '<div class="slot-header"><span class="slot-index">#' + (i + 1) + '</span>' +
+        '<span class="slot-dot ' + (s.enabled && connected ? 'active' : 'inactive') + '"></span></div>' +
+        '<div class="slot-types">' + hfTag + lfTag + '</div>' + nick + '</div>';
+    });
+    grid.innerHTML = html;
+  }
+
+  var gpoState = true;
+  document.getElementById('btn-toggle-gpo').addEventListener('click', function() {
+    gpoState = !gpoState;
+    document.getElementById('slots-gpo').textContent = gpoState ? 'ON' : 'OFF';
+    document.getElementById('slots-gpo').style.color = gpoState ? 'var(--cyan)' : 'var(--text-muted)';
+    var gpoBulb = document.getElementById('gpo-bulb');
+    var gpiBulb = document.getElementById('gpi-bulb');
+    gpoBulb.className = gpoState ? 'stat-bulb on' : 'stat-bulb off';
+    gpiBulb.className = gpoState ? 'stat-bulb off' : 'stat-bulb on';
+    document.getElementById('battery-level').textContent = gpoState ? '87%' : '72%';
+  });
+
+  /* ====== Read page ====== */
+  (function() {
+    var readChips = document.querySelectorAll('#page-read .chip');
+    readChips.forEach(function(c) {
+      c.addEventListener('click', function() {
+        readChips.forEach(function(cc) { cc.classList.remove('active'); });
+        this.classList.add('active');
+      });
+    });
+
+    var slotIdx = 1;
+    document.getElementById('read-slot-pick').addEventListener('click', function() {
+      slotIdx = (slotIdx % 8) + 1;
+      this.textContent = '槽位 #' + slotIdx;
+    });
+
+    document.getElementById('btn-read-start').addEventListener('click', function() {
+      var btn = this;
+      btn.textContent = '读取中...';
+      btn.disabled = true;
+      setTimeout(function() {
+        var hex = '';
+        for (var i = 0; i < 16; i++) {
+          for (var j = 0; j < 16; j++) {
+            hex += ('0' + (Math.floor(Math.random() * 256)).toString(16).toUpperCase()).slice(-2) + ' ';
+          }
+          if (i < 15) hex += '\n';
+        }
+        var panel = document.getElementById('read-result');
+        document.getElementById('read-result-text').textContent = hex;
+        panel.style.display = '';
+        panel.classList.add('fade-in');
+        btn.textContent = '\u2316 开始读卡';
+        btn.disabled = false;
+      }, 1500);
+    });
+
+    document.getElementById('btn-copy').addEventListener('click', function() {
+      var text = document.getElementById('read-result-text').textContent;
+      navigator.clipboard.writeText(text).then(function() {
+        var btn = document.getElementById('btn-copy');
+        btn.textContent = '已复制';
+        setTimeout(function() { btn.textContent = '复制'; }, 1500);
+      });
+    });
+
+    document.getElementById('btn-save-result').addEventListener('click', function() {
+      alert('已保存到卡库');
+    });
+  })();
+
+  /* ====== Write page ====== */
+  (function() {
+    var writeChips = document.querySelectorAll('#page-write .chip[data-mode]');
+    writeChips.forEach(function(c) {
+      c.addEventListener('click', function() {
+        writeChips.forEach(function(cc) { cc.classList.remove('active'); });
+        this.classList.add('active');
+      });
+    });
+
+    var writeSlotIdx = 1;
+    document.getElementById('write-slot-pick').addEventListener('click', function() {
+      writeSlotIdx = (writeSlotIdx % 8) + 1;
+      this.textContent = '#' + writeSlotIdx;
+    });
+
+    var srcChips = document.querySelectorAll('#page-write .chip[data-source]');
+    srcChips.forEach(function(c) {
+      c.addEventListener('click', function() {
+        srcChips.forEach(function(cc) { cc.classList.remove('active'); });
+        this.classList.add('active');
+        var src = this.getAttribute('data-source');
+        document.getElementById('manual-input').style.display = (src === 'manual') ? '' : 'none';
+      });
+    });
+
+    var keyTypes = ['Key A', 'Key B'];
+    var keyIdx = 0;
+    document.getElementById('key-type-pick').addEventListener('click', function() {
+      keyIdx = (keyIdx + 1) % 2;
+      this.textContent = keyTypes[keyIdx];
+    });
+
+    document.getElementById('btn-write').addEventListener('click', function() {
+      var data = document.getElementById('hex-data').value.trim();
+      if (!data) { alert('请输入十六进制数据'); return; }
+      var btn = this;
+      btn.textContent = '写入中...';
+      btn.disabled = true;
+      setTimeout(function() {
+        var logPanel = document.getElementById('write-log');
+        document.getElementById('write-log-text').textContent =
+          'Slot: #' + writeSlotIdx + '\nMode: HF\nBlock: ' + document.getElementById('block-num').value +
+          '\nKey: ' + keyTypes[keyIdx] + '\n\n[OK] 写入成功\nData: ' + data.substring(0, 64) + (data.length > 64 ? '...' : '');
+        logPanel.style.display = '';
+        logPanel.classList.add('fade-in');
+        btn.textContent = '\u270E 写入';
+        btn.disabled = false;
+      }, 1800);
+    });
+
+    document.getElementById('btn-preview').addEventListener('click', function() {
+      var data = document.getElementById('hex-data').value.trim();
+      if (!data) { alert('请先输入数据'); return; }
+      var logPanel = document.getElementById('write-log');
+      document.getElementById('write-log-text').textContent = '[预览]\n\n数据长度: ' + data.replace(/\s/g, '').length / 2 + ' 字节\n前16字节: ' + data.substring(0, 48);
+      logPanel.style.display = '';
+      logPanel.classList.add('fade-in');
+    });
+  })();
+
+  /* Init */
+  renderSlots();
+})();
+</script>
+</body>
+</html>

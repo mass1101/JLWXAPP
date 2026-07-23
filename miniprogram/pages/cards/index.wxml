@@ -1,0 +1,21 @@
+<!-- pages/cards/index.wxml -->
+<wxs module="c" src="../../theme/colors.wxs" />
+<view class="page page-dark">
+  <view class="page-title">卡库</view>
+  <view class="row space-between v-center pad-h">
+    <text class="mono-label">共 {{cards.length}} 张卡片</text>
+    <button class="btn-outline-sm" bindtap="addCard">\u002B 新建</button>
+  </view>
+  <view wx:if="{{!cards.length}}" class="empty-tip pad-h">暂无卡片，请先读卡或手动创建</view>
+  <view class="list-panel" wx:if="{{cards.length}}">
+    <view class="card-list-item" wx:for="{{cards}}" wx:key="id" bindtap="viewCard" data-id="{{item.id}}">
+      <view class="row space-between v-center">
+        <view>
+          <text class="card-name">{{item.id}}</text>
+          <text class="mono-tag">{{item.type || '--'}}</text>
+        </view>
+        <text class="mono-tag">{{item.createdAt || ''}}</text>
+      </view>
+    </view>
+  </view>
+</view>

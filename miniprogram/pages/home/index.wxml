@@ -1,0 +1,59 @@
+<!-- pages/home/index.wxml -->
+<wxs module="c" src="../../theme/colors.wxs" />
+<view class="page page-dark">
+  <!-- 顶部 -->
+  <view class="top-bar">
+    <text class="logo">巨龙</text>
+    <text class="status {{ble.connected ? 'connected' : 'disconnected'}}">
+      {{ble.connected ? '\u260E 已连接' : '\u260E 未连接'}}
+    </text>
+  </view>
+
+  <!-- 设备信息 -->
+  <view class="panel-bg device-info" wx:if="{{ble.connected}}">
+    <view class="row v-center space-between">
+      <text class="mono-label">设备型号: {{deviceInfo.model || '--'}}</text>
+      <text class="mono-label">固件版本: {{deviceInfo.fwVersion || '--'}}</text>
+    </view>
+    <view class="row v-center space-between mt-sm">
+      <view class="row v-center gap-sm">
+        <text class="mono-label">GPO</text>
+        <view class="stat-bulb {{gpio.gpo ? 'on' : 'off'}}"></view>
+      </view>
+      <view class="row v-center gap-sm">
+        <text class="mono-label">GPI</text>
+        <view class="stat-bulb {{gpio.gpi ? 'on' : 'off'}}"></view>
+      </view>
+      <text class="mono-label">电池: {{batteryLevel}}%</text>
+    </view>
+  </view>
+
+  <!-- 连接按钮 -->
+  <view class="action-row">
+    <button class="btn-cyan" bindtap="connectDevice" wx:if="{{!ble.connected}}">连接设备</button>
+    <button class="btn-outline-gold" bindtap="disconnectDevice" wx:if="{{ble.connected}}">断开连接</button>
+    <button class="btn-outline" bindtap="scanDevices">扫描设备</button>
+  </view>
+
+  <!-- 设备列表 -->
+  <view wx:if="{{scanResults.length}}" class="panel-bg list-panel">
+    <view class="list-header">附近设备 ({{scanResults.length}})</view>
+    <view class="list-item" wx:for="{{scanResults}}" wx:key="index" bindtap="onDeviceTap" data-index="{{index}}">
+      <view class="row space-between v-center">
+        <view>
+          <text class="dev-name">{{item.name}}</text>
+          <text class="dev-id">{{item.deviceId}}</text>
+        </view>
+        <text class="rssi">-{{item.RSSI}}dBm</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快捷操作 -->
+  <view class="quick-actions">
+    <view class="btn-cyan btn-quick" bindtap="goRead"><text>\u2316 读卡</text></view>
+    <view class="btn-gold btn-quick" bindtap="goWrite"><text>\u270E 写卡</text></view>
+    <view class="btn-outline btn-quick" bindtap="goSlots"><text>\u25A6 卡槽</text></view>
+    <view class="btn-outline btn-quick" bindtap="goTools"><text>\u2699 工具</text></view>
+  </view>
+</view>

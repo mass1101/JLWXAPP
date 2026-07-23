@@ -1,0 +1,34 @@
+.card-slot {
+  background: #142030;
+  border: 1px solid #1F3B55;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 0 8px rgba(58,217,247,0.06);
+}
+.card-slot.disabled { opacity: 0.5; }
+.slot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.slot-index {
+  color: #65E8FF;
+  font-size: 15px;
+  font-weight: 700;
+}
+.slot-status {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+}
+.slot-status.active { background: #3AD9F7; box-shadow: 0 0 6px #3AD9F7; }
+.slot-status.inactive { background: #6D8090; }
+.slot-types { display: flex; gap: 6px; margin-bottom: 4px; }
+.slot-tag { font-size: 11px; }
+.slot-nick {
+  color: #6D8090;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

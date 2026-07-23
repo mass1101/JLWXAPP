@@ -1,0 +1,35 @@
+<!-- pages/settings/index.wxml -->
+<wxs module="c" src="../../theme/colors.wxs" />
+<view class="page page-dark">
+  <view class="page-title">设置</view>
+  <view class="panel-bg form-panel">
+    <view class="form-sec-title">连接设置</view>
+    <view class="form-item">
+      <text class="form-label">自动重连</text>
+      <switch checked="{{autoReconnect}}" bindchange="onAutoReconnect" color="#3AD9F7" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">扫描超时 (秒)</text>
+      <input class="input-dark input-sm" value="{{scanTimeout}}" bindinput="onScanTimeout" type="number" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">连接超时 (秒)</text>
+      <input class="input-dark input-sm" value="{{connectTimeout}}" bindinput="onConnectTimeout" type="number" />
+    </view>
+    <view class="form-sec-title">显示设置</view>
+    <view class="form-item">
+      <text class="form-label">数据显示格式</text>
+      <picker range="{{displayFormats}}" value="{{displayFormatIdx}}" bindchange="onDisplayFormat">
+        <text class="picker-link">{{displayFormats[displayFormatIdx]}}</text>
+      </picker>
+    </view>
+    <view class="form-item">
+      <text class="form-label">调试模式</text>
+      <switch checked="{{debugMode}}" bindchange="onDebugMode" color="#3AD9F7" />
+    </view>
+  </view>
+  <view class="action-row pad-h">
+    <button class="btn-cyan" bindtap="saveSettings">保存设置</button>
+    <button class="btn-outline" bindtap="resetSettings">恢复默认</button>
+  </view>
+</view>

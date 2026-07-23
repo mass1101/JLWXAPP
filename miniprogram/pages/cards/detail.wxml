@@ -1,0 +1,15 @@
+<!-- pages/cards/detail.wxml -->
+<wxs module="c" src="../../theme/colors.wxs" />
+<view class="page page-dark">
+  <view class="page-title">卡片详情</view>
+  <view class="panel-bg detail-panel">
+    <text class="detail-id">ID: {{card.id}}</text>
+    <text class="detail-type">类型: {{card.type || '--'}}</text>
+    <text class="detail-date">创建: {{card.createdAt || '--'}}</text>
+    <scroll-view scroll-y class="detail-scroll"><text class="mono-text">{{card.data || '(无数据)'}}</text></scroll-view>
+  </view>
+  <view class="action-row">
+    <button class="btn-gold" bindtap="writeCard">写入此卡</button>
+    <button class="btn-outline" bindtap="deleteCard" style="color:#FF6B6B;border-color:#FF6B6B;">删除</button>
+  </view>
+</view>

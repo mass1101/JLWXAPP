@@ -1,0 +1,7 @@
+@import '../../app.wxss';
+.form-panel { margin: 12px; padding: 12px; }
+.form-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #1F3B55; }
+.form-item-vert { display: flex; flex-direction: column; padding: 10px 0; border-bottom: 1px solid #1F3B55; }
+.form-label { color: #BEDBF0; font-size: 14px; margin-bottom: 6px; }
+.area { font-size: 12px; min-height: 80px; padding: 8px; }
+.input-sm { width: 60px; }
