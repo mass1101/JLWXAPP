@@ -163,16 +163,23 @@ class BLEService {
   _setupUART(characteristics, resolve, reject) {
     const txUuid = BLE_UUIDS.UART_TX.toUpperCase();
     const rxUuid = BLE_UUIDS.UART_RX.toUpperCase();
-    const txChar = characteristics.find(c => c.uuid.toUpperCase() === txUuid);
-    const rxChar = characteristics.find(c => c.uuid.toUpperCase() === rxUuid);
+    const char06 = characteristics.find(c => c.uuid.toUpperCase() === txUuid);
+    const char03 = characteristics.find(c => c.uuid.toUpperCase() === rxUuid);
 
-    if (!txChar || !rxChar) { reject(new Error('UART characteristics not found')); return; }
+    if (!char06 || !char03) { reject(new Error('UART characteristics not found')); return; }
 
-    this._txChar = txChar;
-    this._rxChar = rxChar;
+    const notifyChar = (char06.properties && (char06.properties.notify || char06.properties.indicate))
+      ? char06 : ((char03.properties && (char03.properties.notify || char03.properties.indicate)) ? char03 : null);
+    const writeChar = (char06.properties && (char06.properties.write || char06.properties.writeNoResponse))
+      ? char06 : ((char03.properties && (char03.properties.write || char03.properties.writeNoResponse)) ? char03 : null);
+
+    if (!notifyChar || !writeChar) { reject(new Error('UART properties mismatch')); return; }
+
+    this._txChar = notifyChar;
+    this._rxChar = writeChar;
 
     const listenerRegistered = (res) => {
-      if (res && res.characteristicId === txChar.uuid && this._dataCallback) {
+      if (res && res.characteristicId === notifyChar.uuid && this._dataCallback) {
         this._dataCallback(new Uint8Array(res.value));
       }
     };
@@ -182,7 +189,7 @@ class BLEService {
       wx.writeBLECharacteristicValue({
         deviceId: this._deviceId,
         serviceId: BLE_UUIDS.NRF_SERVICE,
-        characteristicId: rxChar.uuid,
+        characteristicId: writeChar.uuid,
         value: handshake.buffer,
         success: () => {
           this._state = STATE.CONNECTED;
@@ -201,39 +208,22 @@ class BLEService {
       wx.notifyBLECharacteristicValueChange({
         deviceId: this._deviceId,
         serviceId: BLE_UUIDS.NRF_SERVICE,
-        characteristicId: txChar.uuid,
+        characteristicId: notifyChar.uuid,
         state: true,
         success: () => {
           wx.onBLECharacteristicValueChange(listenerRegistered);
           sendHandshake();
         },
-        fail: (notifyErr) => {
-          tryMonitorWithoutNotify();
-        }
+        fail: () => tryMonitorWithoutNotify()
       });
     };
 
     const tryMonitorWithoutNotify = () => {
       wx.onBLECharacteristicValueChange(listenerRegistered);
-      wx.writeBLECharacteristicValue({
-        deviceId: this._deviceId,
-        serviceId: BLE_UUIDS.NRF_SERVICE,
-        characteristicId: rxChar.uuid,
-        value: new Uint8Array([0x01, 0x00]).buffer,
-        success: () => {
-          setTimeout(sendHandshake, 300);
-        },
-        fail: () => {
-          sendHandshake();
-        }
-      });
+      sendHandshake();
     };
 
-    if (txChar.properties && !(txChar.properties.notify || txChar.properties.indicate)) {
-      tryMonitorWithoutNotify();
-    } else {
-      tryNotify();
-    }
+    tryNotify();
   }
 
   _setupDFU(characteristics, resolve, reject) {
