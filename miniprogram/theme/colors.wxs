@@ -1,0 +1,23 @@
+var cyan = '#3AD9F7';
+var cyanLight = '#65E8FF';
+var gold = '#FFD700';
+var bg = '#0A1322';
+var panelBg = '#142030';
+var border = '#1F3B55';
+var text = '#E0F0FF';
+var muted = '#6D8090';
+var label = '#BEDBF0';
+var danger = '#FF6B6B';
+
+module.exports = {
+  cyan: cyan,
+  cyanLight: cyanLight,
+  gold: gold,
+  bg: bg,
+  panelBg: panelBg,
+  border: border,
+  text: text,
+  muted: muted,
+  label: label,
+  danger: danger
+};

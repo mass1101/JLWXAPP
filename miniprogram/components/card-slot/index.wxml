@@ -1,4 +1,4 @@
-<wxs module="c" src="../../../theme/colors.wxs" />
+<wxs module="c" src="../../theme/colors.wxs" />
 
 <view class="card-slot {{connected ? '' : 'disabled'}}">
   <view class="slot-header">
