@@ -1,72 +1,149 @@
-import { BLEManager } from '../../../services/ble-manager';
-import { ErrorHandler } from '../../../services/error-handler';
+const { CHAMELEON_COMMANDS } = require('../../../utils/constants');
+const { bytesToHex } = require('../../../utils/hex');
+const app = getApp();
 
-const TOOL_INFO = {
-  uid:       { name: 'UID 工具',       desc: '修改/克隆卡片 UID',                     cmd: 'MF1_READ_BLOCK', writeCmd: 'MF1_WRITE_BLOCK' },
-  dump:      { name: 'DUMP 工具',      desc: '导出/导入卡片 dump',                   cmd: 'MF1_READ_SECTOR', writeCmd: 'MF1_WRITE_SECTOR' },
-  keyscan:   { name: '密钥扫描',       desc: '扫描 MIFARE 密钥',                      cmd: 'MF1_CHECK_KEY' },
-  emulate:   { name: '卡模拟',          desc: '切换为模拟模式',                          cmd: 'SET_DEVICE_MODE', defaultArgs: '{"mode":1}' },
-  sniff:     { name: '嗅探工具',       desc: '抓取 RFID 通信数据',                    cmd: 'HF_SNIFF', stopCmd: 'HF_SNIFF_STOP', lfCmd: 'LF_SNIFF' },
-  bruteforce:{ name: '密钥攻击',       desc: '弱密钥测试 Nested/Darkside',            cmd: 'MF1_NESTED', altCmd: 'MF1_DARKSIDE' },
-  magic:     { name: '魔卡工具',       desc: 'Gen1a/Gen2 Magic Card 操作',           cmd: 'MF1_WRITE_BLOCK' },
-  ndefformat:{ name: 'NDEF 格式化',    desc: '格式化 NDEF 标签',                     cmd: 'NTAG_WRITE_PAGE', readCmd: 'NTAG_READ_PAGE' },
-  hf14a:     { name: 'ISO14443A',      desc: '高频 ISO14443A 读卡操作',             cmd: 'HF14A_SCAN' },
-  lfcmd:     { name: '低频探测',       desc: '低频卡探测与分析',                       cmd: 'LF_EM410X_READ' }
+const TOOL_CONFIGS = {
+  'hf14a-sniff': { name: 'HF14A 嗅探', desc: '抓取高频14A通信数据', cmd: CHAMELEON_COMMANDS.HF14A_SNIFF, stopCmd: CHAMELEON_COMMANDS.HF14A_SNIFF_STOP, hasDuration: true },
+  'lf-sniff': { name: 'LF 嗅探', desc: '抓取低频通信数据', cmd: CHAMELEON_COMMANDS.LF_SNIFF, stopCmd: CHAMELEON_COMMANDS.LF_SNIFF_STOP, hasDuration: true },
+  'mfkey32': { name: 'MFKey32', desc: 'MIFARE Key32 密钥检测', cmd: CHAMELEON_COMMANDS.MFKEY32_SET_DETECT, hasPayload: true },
+  'mf1-detect': { name: 'MIFARE 检测', desc: '检测 MIFARE 卡类型', cmd: CHAMELEON_COMMANDS.MF1_SUPPORT_DETECT },
+  'mf1-nested': { name: 'MIFARE Nested', desc: 'Nested 密钥获取', cmd: CHAMELEON_COMMANDS.MF1_NESTED_ACQUIRE, hasParams: true },
+  'ntag-detect': { name: 'NTAG 检测', desc: 'NTAG 标签检测', cmd: CHAMELEON_COMMANDS.MF0_NTAG_SET_DETECTION_ENABLE },
+  'device-info': { name: '设备信息', desc: '查看设备详细信息', multiCmd: true },
+  'device-settings': { name: '设备设置', desc: '调整设备参数', multiCmd: true },
+  'factory-reset': { name: '恢复出厂', desc: '重置设备', cmd: CHAMELEON_COMMANDS.FACTORY_RESET, dangerous: true }
 };
 
 Page({
   data: {
-    ble: { connected: false },
-    toolName: '', toolDesc: '',
-    command: '', args: '', result: null, executing: false,
-    toolId: '', altCmd: '', stopCmd: '', writeCmd: ''
+    connected: false,
+    toolName: '',
+    toolDesc: '',
+    executing: false,
+    result: '',
+    resultHex: '',
+    tool: null
   },
+
   onLoad(opts) {
     const id = opts.id || '';
-    const info = TOOL_INFO[id] || { name: '工具', desc: '', cmd: '' };
-    wx.setNavigationBarTitle({ title: info.name });
-    this.setData({
-      toolName: info.name, toolDesc: info.desc, toolId: id,
-      command: info.cmd, altCmd: info.altCmd || '', stopCmd: info.stopCmd || '',
-      writeCmd: info.writeCmd || '',
-      defaultArgs: info.defaultArgs || ''
-    });
-    if (info.defaultArgs) this.setData({ args: info.defaultArgs });
+    const config = TOOL_CONFIGS[id] || { name: '工具', desc: '' };
+    wx.setNavigationBarTitle({ title: config.name });
+    this.setData({ toolName: config.name, toolDesc: config.desc, tool: config });
   },
+
   onShow() {
-    this.stateListener = (s) => { this.setData({ ble: s }); };
-    BLEManager.on('state', this.stateListener);
-    this.setData({ ble: BLEManager.getState() });
-  },
-  onHide() { BLEManager.off('state', this.stateListener); },
-  onCommand(e) { this.setData({ command: e.detail.value }); },
-  onArgs(e) { this.setData({ args: e.detail.value }); },
-  async execute() {
-    if (!this.data.command) { wx.showToast({ title: '请输入命令', icon: 'none' }); return; }
-    try {
-      this.setData({ executing: true, result: null });
-      let argObj = { slot: 0, block: 0, keyType: 0x60 };
-      if (this.data.args.trim()) {
-        try { argObj = { ...argObj, ...JSON.parse(this.data.args) }; } catch(e) {}
-      }
-      const r = await BLEManager.customCommand(this.data.command, argObj);
-      this.setData({ result: JSON.stringify(r, null, 2), executing: false });
-    } catch (err) {
-      this.setData({ executing: false, result: '错误: ' + (err.message || err) });
-      ErrorHandler.show(err);
+    const bleService = app.globalData.bleService;
+    const connected = bleService ? bleService.isConnected : false;
+    this.setData({ connected });
+
+    if (bleService) {
+      bleService.onConnectionStateChanged((info) => {
+        this.setData({ connected: info.state === 'connected' });
+      });
     }
   },
-  async executeAlt() {
-    if (!this.data.altCmd) { wx.showToast({ title: '无备用命令', icon: 'none' }); return; }
-    this.setData({ command: this.data.altCmd });
-    await this.execute();
+
+  async execute() {
+    const bleService = app.globalData.bleService;
+    if (!bleService || !bleService.isConnected) {
+      wx.showToast({ title: '请先连接设备', icon: 'none' });
+      return;
+    }
+
+    const tool = this.data.tool;
+    if (!tool || !tool.cmd) {
+      wx.showToast({ title: '无可用命令', icon: 'none' });
+      return;
+    }
+
+    if (tool.dangerous) {
+      wx.showModal({
+        title: '危险操作',
+        content: '恢复出厂设置将清除所有数据，确定继续？',
+        success: (res) => {
+          if (res.confirm) {
+            wx.showModal({
+              title: '再次确认',
+              content: '此操作不可撤销，确定恢复出厂？',
+              success: (res2) => {
+                if (res2.confirm) this.doExecute(bleService, tool);
+              }
+            });
+          }
+        }
+      });
+      return;
+    }
+
+    await this.doExecute(bleService, tool);
   },
-  async stopOp() {
-    if (!this.data.stopCmd) { wx.showToast({ title: '无可停止命令', icon: 'none' }); return; }
-    this.setData({ command: this.data.stopCmd });
-    await this.execute();
+
+  async doExecute(bleService, tool) {
+    try {
+      this.setData({ executing: true, result: '', resultHex: '' });
+
+      if (tool.multiCmd) {
+        const results = await this.executeMultiCmd(bleService, tool);
+        this.setData({ result: JSON.stringify(results, null, 2), executing: false });
+        return;
+      }
+
+      const payload = tool.hasPayload ? [1] : [];
+      const result = await bleService.sendCommand(tool.cmd, payload);
+
+      let resultText = '';
+      let resultHex = '';
+      if (result && result.data && result.data.length > 0) {
+        resultHex = bytesToHex(result.data);
+        resultText = '状态: ' + result.status + '\n长度: ' + result.dataLength + '\n数据: ' + resultHex;
+      } else {
+        resultText = '状态: ' + (result ? result.status : '?') + '\n无返回数据';
+      }
+      this.setData({ result: resultText, resultHex, executing: false });
+    } catch (err) {
+      this.setData({
+        executing: false,
+        result: '错误: ' + (err.message || err),
+        resultHex: ''
+      });
+    }
   },
+
+  async executeMultiCmd(bleService, tool) {
+    const results = {};
+    const commands = [
+      { key: 'version', cmd: CHAMELEON_COMMANDS.GET_APP_VERSION },
+      { key: 'chipId', cmd: CHAMELEON_COMMANDS.GET_DEVICE_CHIP_ID },
+      { key: 'deviceType', cmd: CHAMELEON_COMMANDS.GET_DEVICE_TYPE },
+      { key: 'battery', cmd: CHAMELEON_COMMANDS.GET_BATTERY_CHARGE }
+    ];
+
+    for (const item of commands) {
+      try {
+        const result = await bleService.sendCommand(item.cmd, []);
+        if (result && result.data && result.data.length > 0) {
+          results[item.key] = bytesToHex(result.data);
+        } else {
+          results[item.key] = '(无数据)';
+        }
+      } catch (e) {
+        results[item.key] = '读取失败';
+      }
+    }
+    return results;
+  },
+
+  onConnectionStateChanged() {
+    const bleService = app.globalData.bleService;
+    this.setData({ connected: bleService ? bleService.isConnected : false });
+  },
+
   copyResult() {
-    wx.setClipboardData({ data: this.data.result, success() { wx.showToast({ title: '已复制' }); } });
+    if (!this.data.result) return;
+    wx.setClipboardData({
+      data: this.data.result,
+      success: () => { wx.showToast({ title: '已复制' }); }
+    });
   }
 });

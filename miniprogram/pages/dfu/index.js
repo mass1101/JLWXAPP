@@ -1,25 +1,58 @@
-import { BLEManager } from '../../services/ble-manager';
-import { ErrorHandler } from '../../services/error-handler';
-import { ActivationManager } from '../../services/activation-manager';
+const act = require('../../services/activation');
+const st = require('../../services/storage');
+const { CHAMELEON_COMMANDS, BLE_UUIDS } = require('../../utils/constants');
+const app = getApp();
 
-const FW_80SLOT_URL = 'https://github.com/mass1101/hosts/raw/refs/heads/main/ultra-dfu-full.zip';
+const FW_80SLOT_URL = 'https://raw.githubusercontent.com/RfidResearchGroup/ChameleonUltra/main/firmware/ChameleonUltra-80Slots.bin';
 
 Page({
   data: {
-    ble: { connected: false }, fwVersion: '', deviceModel: '', bootVersion: '',
-    fwFile: null, fwSource: '', inProgress: false, steps: [], errorMsg: '',
-    activated: false
+    connected: false,
+    fwVersion: '',
+    deviceModel: '',
+    bootVersion: '',
+    fwSource: '',
+    fwFile: null,
+    activated: false,
+    updating: false,
+    progress: 0,
+    statusText: '',
+    steps: [],
+    errorMsg: ''
   },
+
   onShow() {
-    this.stateListener = (s) => {
-      this.setData({ ble: s, fwVersion: s.fwVersion || '', deviceModel: s.deviceModel || '' });
-    };
-    BLEManager.on('state', this.stateListener);
-    this.setData({ ble: BLEManager.getState() });
-    const actData = ActivationManager.getActivationData();
-    this.setData({ activated: actData.activated || false });
+    const bleService = app.globalData.bleService;
+    const connected = bleService ? bleService.isConnected : false;
+    const activated = act.isActivated();
+    const activatedChipId = act.getActivatedChipId();
+    const storedChipId = st.getChipId();
+    const is80SlotAvailable = activated && storedChipId && activatedChipId === storedChipId;
+
+    this.setData({ connected, activated, is80SlotAvailable });
+
+    if (bleService) {
+      bleService.onConnectionStateChanged((info) => {
+        this.setData({ connected: info.state === 'connected' });
+      });
+    }
+
+    if (connected && bleService) {
+      this.loadDeviceInfo(bleService);
+    }
   },
-  onHide() { BLEManager.off('state', this.stateListener); },
+
+  async loadDeviceInfo(bleService) {
+    try {
+      const verResult = await bleService.sendCommand(CHAMELEON_COMMANDS.GET_APP_VERSION, []);
+      if (verResult && verResult.data && verResult.data.length > 0) {
+        const verBytes = Array.from(verResult.data);
+        this.setData({ fwVersion: verBytes.join('.') });
+      }
+    } catch (e) {
+      // 静默失败
+    }
+  },
 
   selectFirmware() {
     wx.showToast({ title: '请在开发者工具中手动选择文件', icon: 'none' });
@@ -29,51 +62,107 @@ Page({
   start80SlotDFU() {
     this.setData({
       fwSource: '80slot',
-      fwFile: { name: 'ultra-dfu-full.zip', size: 0, url: FW_80SLOT_URL }
+      fwFile: { name: 'ultra-dfu.bin', size: 0 }
     });
     wx.showToast({ title: '80卡槽固件已就绪，点击开始升级', icon: 'none' });
   },
 
   async startDFU() {
+    const bleService = app.globalData.bleService;
+    if (!bleService || !bleService.isConnected) {
+      wx.showToast({ title: '请先连接设备', icon: 'none' });
+      return;
+    }
+
     const sourceLabel = this.data.fwSource === '80slot' ? '80卡槽固件' : '固件';
+
     try {
-      this.setData({ inProgress: true, steps: [], errorMsg: '' });
+      this.setData({ updating: true, progress: 0, steps: [], errorMsg: '', statusText: '' });
 
       this.addStep('正在进入 Bootloader 模式...', 'active');
-      await BLEManager.customCommand('ENTER_BOOTLOADER');
+      await bleService.sendCommand(CHAMELEON_COMMANDS.ENTER_BOOTLOADER, []);
       this.addStep('已进入 Bootloader 模式', 'done');
 
-      this.addStep('正在传输' + sourceLabel + '数据...', 'active');
+      const deviceId = bleService.deviceId;
+      this.addStep('正在断开主连接...', 'active');
+      app.disconnect();
+      this.addStep('已断开主连接', 'done');
 
-      if (this.data.fwSource === '80slot') {
-        await this.download80SlotFirmware();
-      }
+      this.addStep('等待设备重启...', 'active');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      this.addStep('设备已就绪', 'done');
 
-      this.addStep(sourceLabel + '传输完成，请重新以 DFU 模式连接设备完成刷写', 'done');
-      this.setData({ inProgress: false });
-      wx.showToast({ title: '已进入 Bootloader', icon: 'success' });
+      this.addStep('正在连接 DFU 模式...', 'active');
+      await bleService.connect(deviceId, true);
+      this.addStep('DFU 模式连接成功', 'done');
+
+      this.addStep('正在传输固件数据...', 'active');
+      await this.transferFirmware(bleService);
+
+      this.addStep(sourceLabel + '升级完成，请重启设备', 'done');
+      this.setData({ updating: false, progress: 100, statusText: '升级完成' });
+      wx.showToast({ title: '升级完成', icon: 'success' });
     } catch (err) {
       const msg = '升级失败: ' + (err.message || '未知错误');
-      this.setData({ inProgress: false, errorMsg: msg });
+      this.setData({ updating: false, errorMsg: msg });
       this.addStep(msg, 'error');
-      ErrorHandler.show(err);
     }
   },
 
-  download80SlotFirmware() {
+  async transferFirmware(bleService) {
+    if (this.data.fwSource === '80slot') {
+      return this.downloadAndTransfer80Slot(bleService);
+    }
+    if (this.data.fwFile && this.data.fwFile.size) {
+      wx.showToast({ title: '请在开发者工具中手动传输固件', icon: 'none' });
+    }
+  },
+
+  downloadAndTransfer80Slot(bleService) {
     return new Promise((resolve, reject) => {
       wx.downloadFile({
         url: FW_80SLOT_URL,
         success: (res) => {
           if (res.statusCode === 200) {
-            resolve(res.tempFilePath);
+            const fs = wx.getFileSystemManager();
+            try {
+              const data = fs.readFileSync(res.tempFilePath);
+              this.sendFirmwareChunks(bleService, data).then(resolve).catch(reject);
+            } catch (e) {
+              reject(new Error('固件读取失败'));
+            }
           } else {
-            reject(new Error('下载失败'));
+            reject(new Error('固件下载失败'));
           }
         },
-        fail: () => { reject(new Error('下载失败')); }
+        fail: () => {
+          reject(new Error('固件下载失败'));
+        }
       });
     });
+  },
+
+  async sendFirmwareChunks(bleService, data) {
+    const CHUNK_SIZE = 20;
+    const totalChunks = Math.ceil(data.length / CHUNK_SIZE);
+    const serviceId = BLE_UUIDS.DFU_SERVICE;
+    const charId = BLE_UUIDS.DFU_FIRMWARE;
+
+    for (let i = 0; i < data.length; i += CHUNK_SIZE) {
+      const chunk = data.slice(i, Math.min(i + CHUNK_SIZE, data.length));
+      await new Promise((resolve, reject) => {
+        wx.writeBLECharacteristicValue({
+          deviceId: bleService.deviceId,
+          serviceId: serviceId,
+          characteristicId: charId,
+          value: chunk.buffer,
+          success: resolve,
+          fail: reject
+        });
+      });
+      const progress = Math.round(((i + CHUNK_SIZE) / data.length) * 100);
+      this.setData({ progress: Math.min(progress, 100), statusText: '传输中 ' + Math.min(progress, 100) + '%' });
+    }
   },
 
   addStep(text, status) {
@@ -81,5 +170,7 @@ Page({
     this.setData({ steps });
   },
 
-  cancelDFU() { this.setData({ fwSource: '', fwFile: null, inProgress: false, steps: [] }); }
+  cancelDFU() {
+    this.setData({ fwSource: '', fwFile: null, updating: false, progress: 0, steps: [], errorMsg: '', statusText: '' });
+  }
 });

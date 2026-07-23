@@ -1,40 +1,78 @@
+const st = require('../../services/storage');
+
 Page({
   data: {
-    tab: 'keys', keyDict: [], typeDict: [],
-    newKeyName: '', newKeyValue: '', newType: ''
+    tab: 'keys',
+    keyDict: [],
+    typeDict: [],
+    newKeyName: '',
+    newKeyValue: '',
+    newType: ''
   },
-  onShow() { this.loadDict(); },
+
+  onShow() {
+    this.loadDict();
+  },
+
   loadDict() {
-    const keys = wx.getStorageSync('keyDict') || [];
-    const types = wx.getStorageSync('typeDict') || [];
-    this.setData({ keyDict: keys, typeDict: types });
+    var keyDict = st.getDictionary('keys');
+    var typeDict = st.getDictionary('types');
+    this.setData({ keyDict: keyDict, typeDict: typeDict });
   },
-  onTab(e) { this.setData({ tab: e.currentTarget.dataset.tab }); },
-  onNewKeyName(e) { this.setData({ newKeyName: e.detail.value }); },
-  onNewKeyValue(e) { this.setData({ newKeyValue: e.detail.value }); },
+
+  onTab(e) {
+    this.setData({ tab: e.currentTarget.dataset.tab });
+  },
+
+  onNewKeyName(e) {
+    this.setData({ newKeyName: e.detail.value });
+  },
+
+  onNewKeyValue(e) {
+    this.setData({ newKeyValue: e.detail.value });
+  },
+
   addKey() {
-    if (!this.data.newKeyName || !this.data.newKeyValue) { wx.showToast({ title: '请填写完整', icon: 'none' }); return; }
-    const keys = [...this.data.keyDict, { name: this.data.newKeyName, value: this.data.newKeyValue }];
-    wx.setStorageSync('keyDict', keys);
+    if (!this.data.newKeyName || !this.data.newKeyValue) {
+      wx.showToast({ title: '请填写完整', icon: 'none' });
+      return;
+    }
+    var keys = st.getDictionary('keys');
+    keys.push({ name: this.data.newKeyName, value: this.data.newKeyValue });
+    st.saveDictionary('keys', keys);
     this.setData({ keyDict: keys, newKeyName: '', newKeyValue: '' });
+    wx.showToast({ title: '已添加' });
   },
+
   removeKey(e) {
-    const idx = e.currentTarget.dataset.index;
-    const keys = this.data.keyDict.filter((_, i) => i !== idx);
-    wx.setStorageSync('keyDict', keys);
+    var idx = e.currentTarget.dataset.index;
+    var keys = st.getDictionary('keys');
+    keys = keys.filter(function(_, i) { return i !== idx; });
+    st.saveDictionary('keys', keys);
     this.setData({ keyDict: keys });
   },
-  onNewType(e) { this.setData({ newType: e.detail.value }); },
-  addType() {
-    if (!this.data.newType) { wx.showToast({ title: '请输入类型', icon: 'none' }); return; }
-    const types = [...this.data.typeDict, this.data.newType];
-    wx.setStorageSync('typeDict', types);
-    this.setData({ typeDict: types, newType: '' });
+
+  onNewType(e) {
+    this.setData({ newType: e.detail.value });
   },
+
+  addType() {
+    if (!this.data.newType) {
+      wx.showToast({ title: '请输入类型', icon: 'none' });
+      return;
+    }
+    var types = st.getDictionary('types');
+    types.push(this.data.newType);
+    st.saveDictionary('types', types);
+    this.setData({ typeDict: types, newType: '' });
+    wx.showToast({ title: '已添加' });
+  },
+
   removeType(e) {
-    const idx = e.currentTarget.dataset.index;
-    const types = this.data.typeDict.filter((_, i) => i !== idx);
-    wx.setStorageSync('typeDict', types);
+    var idx = e.currentTarget.dataset.index;
+    var types = st.getDictionary('types');
+    types = types.filter(function(_, i) { return i !== idx; });
+    st.saveDictionary('types', types);
     this.setData({ typeDict: types });
   }
 });

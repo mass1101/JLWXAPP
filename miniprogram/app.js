@@ -1,19 +1,16 @@
-const bleService = require('./services/ble');
+const BLEService = require('./services/ble');
+const storage = require('./services/storage');
+const activation = require('./services/activation');
 
 App({
   globalData: {
     bleService: null,
-    protocol: null,
-    storage: null,
-    activation: null,
-    backup: null,
+    storage: storage,
+    activation: activation,
     isConnected: false,
     currentDevice: null,
-    connectionType: null,
     isDFU: false,
     chipId: null,
-    appVersion: null,
-    gitVersion: null,
     batteryLevel: null,
     activeSlot: 0,
     deviceMode: 0,
@@ -21,11 +18,17 @@ App({
   },
 
   onLaunch() {
-    const storage = require('./services/storage');
-    const activation = require('./services/activation');
-    this.globalData.storage = storage;
-    this.globalData.activation = activation;
+    this.globalData.bleService = new BLEService();
     this.globalData.slotCount = activation.getEffectiveSlotCount();
+    this.globalData.bleService.onConnectionStateChanged((info) => {
+      const wasConnected = this.globalData.isConnected;
+      this.globalData.isConnected = info.state === 'connected';
+      this.globalData.isDFU = info.isDFU || false;
+      this.globalData.currentDevice = info.deviceId || null;
+      if (wasConnected !== this.globalData.isConnected) {
+        this.notifyPages();
+      }
+    });
   },
 
   onShow() {

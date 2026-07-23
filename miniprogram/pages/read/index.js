@@ -1,54 +1,130 @@
-import { BLEManager } from '../../services/ble-manager';
-import { StorageManager } from '../../services/storage-manager';
-import { ErrorHandler } from '../../services/error-handler';
+const st = require('../../services/storage');
+const { CHAMELEON_COMMANDS } = require('../../utils/constants');
 
 Page({
   data: {
     ble: { connected: false },
     mode: 'hf',
     slotIndex: 0,
-    slotRange: Array.from({ length: 8 }, (_, i) => '槽位 ' + (i + 1)),
+    slotRange: [],
     reading: false,
     cardData: null
   },
-  onShow() {
-    this.stateListener = (s) => { this.setData({ ble: s }); };
-    BLEManager.on('state', this.stateListener);
-    this.setData({ ble: BLEManager.getState() });
+
+  onLoad() {
+    this._app = getApp();
+    this._ble = this._app.globalData.bleService;
+    const count = this._app.globalData.slotCount || 8;
+    const range = [];
+    for (let i = 0; i < count; i++) {
+      range.push('槽位 ' + (i + 1));
+    }
+    this.setData({ slotRange: range });
   },
-  onHide() { BLEManager.off('state', this.stateListener); },
-  setMode(e) { this.setData({ mode: e.currentTarget.dataset.mode }); },
-  onSlotPick(e) { this.setData({ slotIndex: parseInt(e.detail.value) }); },
+
+  onShow() {
+    this._updateBleState();
+  },
+
+  onConnectionStateChanged() {
+    this._updateBleState();
+  },
+
+  _updateBleState() {
+    this.setData({ 'ble.connected': this._app.globalData.isConnected });
+  },
+
+  setMode(e) {
+    this.setData({ mode: e.currentTarget.dataset.mode });
+  },
+
+  onSlotPick(e) {
+    this.setData({ slotIndex: parseInt(e.detail.value) });
+  },
+
   async startRead() {
+    if (!this._ble || !this._ble.isConnected) {
+      wx.showToast({ title: '请先连接设备', icon: 'none' });
+      return;
+    }
     try {
       this.setData({ reading: true, cardData: null });
-      let result;
+      let resultText = '';
 
-      if (this.data.mode === 'lf') {
-        result = await BLEManager.customCommand('LF_EM410X_READ', { slot: this.data.slotIndex });
+      if (this.data.mode === 'hf') {
+        const scanResult = await this._ble.sendCommand(CHAMELEON_COMMANDS.SCAN_14A_TAG);
+        const scanData = scanResult.data;
+        const uid = this._bytesToHex(scanData.slice(0, 4));
+        let blocksText = '';
+        for (let block = 0; block < 64; block++) {
+          try {
+            const readResult = await this._ble.sendCommand(CHAMELEON_COMMANDS.MF1_READ_BLOCK, [block]);
+            blocksText += 'Block ' + block + ': ' + this._bytesToHex(readResult.data) + '\n';
+          } catch (e) {
+            break;
+          }
+        }
+        resultText = 'UID: ' + uid + '\n\n' + blocksText;
+      } else if (this.data.mode === 'lf') {
+        const lfResult = await this._ble.sendCommand(CHAMELEON_COMMANDS.EM410X_READ);
+        resultText = this._bytesToHex(lfResult.data);
       } else if (this.data.mode === 'both') {
-        const hfResult = await BLEManager.customCommand('HF14A_SCAN', { slot: this.data.slotIndex });
-        const lfResult = await BLEManager.customCommand('LF_EM410X_READ', { slot: this.data.slotIndex });
-        result = { hf: hfResult, lf: lfResult };
-      } else {
-        result = await BLEManager.customCommand('HF14A_SCAN', { slot: this.data.slotIndex });
+        let hfText = '';
+        let lfText = '';
+        try {
+          const scanResult = await this._ble.sendCommand(CHAMELEON_COMMANDS.SCAN_14A_TAG);
+          const uid = this._bytesToHex(scanResult.data.slice(0, 4));
+          let blocksText = '';
+          for (let block = 0; block < 64; block++) {
+            try {
+              const readResult = await this._ble.sendCommand(CHAMELEON_COMMANDS.MF1_READ_BLOCK, [block]);
+              blocksText += 'Block ' + block + ': ' + this._bytesToHex(readResult.data) + '\n';
+            } catch (e) { break; }
+          }
+          hfText = '[HF]\nUID: ' + uid + '\n' + blocksText;
+        } catch (e) {
+          hfText = '[HF] 读取失败: ' + e.message;
+        }
+        try {
+          const lfResult = await this._ble.sendCommand(CHAMELEON_COMMANDS.EM410X_READ);
+          lfText = '[LF]\n' + this._bytesToHex(lfResult.data);
+        } catch (e) {
+          lfText = '[LF] 读取失败: ' + e.message;
+        }
+        resultText = hfText + '\n\n' + lfText;
       }
 
-      const text = JSON.stringify(result, null, 2);
-      this.setData({ cardData: text, reading: false });
-      await StorageManager.addHistory({ type: 'read', mode: this.data.mode, data: result, timestamp: Date.now() });
+      this.setData({ cardData: resultText, reading: false });
     } catch (err) {
       this.setData({ reading: false });
-      ErrorHandler.show(err);
+      wx.showToast({ title: err.message || '读取失败', icon: 'none' });
     }
   },
-  stopRead() { this.setData({ reading: false }); },
-  copyResult() {
-    wx.setClipboardData({ data: this.data.cardData, success() { wx.showToast({ title: '已复制' }); } });
+
+  stopRead() {
+    this.setData({ reading: false });
   },
+
+  _bytesToHex(bytes) {
+    if (!bytes || bytes.length === 0) return '';
+    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+  },
+
+  copyResult() {
+    wx.setClipboardData({
+      data: this.data.cardData,
+      success() { wx.showToast({ title: '已复制' }); }
+    });
+  },
+
   saveResult() {
-    const id = 'RD_' + Date.now();
-    StorageManager.saveCard(id, { type: 'read', mode: this.data.mode, data: this.data.cardData });
+    const card = {
+      name: 'Read_' + new Date().toLocaleString(),
+      type: 'read',
+      mode: this.data.mode,
+      data: this.data.cardData
+    };
+    st.saveCard(card);
     wx.showToast({ title: '已保存到卡库', icon: 'success' });
   }
 });
